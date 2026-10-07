@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Detox Body Max – Programa de desintoxicação em app</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--bg:#F9FAFB;--card:#fff;--ink:#111827;--mut:#4B5563;--soft:#ECFDF5;--line:#E5E7EB;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1210;--card:#12201B;--ink:#ECFDF5;--mut:#9CB5AA;--soft:#0F2A21;--line:#1F3A30}}
+:root[data-theme="dark"]{--bg:#0B1210;--card:#12201B;--ink:#ECFDF5;--mut:#9CB5AA;--soft:#0F2A21;--line:#1F3A30}
+html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line)}
+.mut{color:var(--mut)}.soft{background:var(--soft)}
+/* Botão 3D */
+.btn3d{display:inline-block;background:linear-gradient(#34D399,#10B981);color:#fff;font-weight:800;border-radius:1rem;padding:1rem 2.2rem;
+box-shadow:0 6px 0 #047857,0 14px 24px rgba(5,150,105,.35),inset 0 2px 0 rgba(255,255,255,.35);
+transition:transform .15s,box-shadow .15s;text-align:center;cursor:pointer;border:0;position:relative;overflow:hidden}
+.btn3d:hover{transform:translateY(-2px);box-shadow:0 8px 0 #047857,0 18px 28px rgba(5,150,105,.4),inset 0 2px 0 rgba(255,255,255,.35)}
+.btn3d:active{transform:translateY(5px);box-shadow:0 1px 0 #047857,0 4px 8px rgba(5,150,105,.3),inset 0 2px 0 rgba(255,255,255,.2)}
+.btn3d::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:shine 3.2s infinite}
+.btn3d.gold{background:linear-gradient(#FDE68A,#FBBF24);color:#451A03;box-shadow:0 6px 0 #B45309,0 14px 24px rgba(180,83,9,.3),inset 0 2px 0 rgba(255,255,255,.5)}
+.btn3d.gold:active{box-shadow:0 1px 0 #B45309,0 4px 8px rgba(180,83,9,.3)}
+@keyframes shine{0%,60%{left:-60%}100%{left:130%}}
+/* Preços */
+.old{color:#DC2626;font-weight:700;font-size:.9rem;text-decoration:line-through;text-decoration-thickness:2px;white-space:nowrap}
+.off{display:inline-block;margin-left:.4rem;background:#FEE2E2;color:#B91C1C;font-size:.7rem;font-weight:800;border-radius:99px;padding:.15rem .55rem;text-decoration:none}
+.price{font-size:1.9rem;font-weight:800;color:#059669;white-space:nowrap;line-height:1.1}
+.price small{font-size:.9rem;font-weight:700;color:var(--mut)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .old{color:#F87171}:root:not([data-theme="light"]) .off{background:#451A1A;color:#FCA5A5}}
+/* Movimento */
+@keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-14px) rotate(6deg)}}
+.float{animation:float 5s ease-in-out infinite}.float2{animation:float 6.5s ease-in-out infinite reverse}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.hero-in>*{opacity:0;animation:rise .7s cubic-bezier(.2,.8,.2,1) forwards}
+.hero-in>*:nth-child(2){animation-delay:.12s}.hero-in>*:nth-child(3){animation-delay:.24s}.hero-in>*:nth-child(4){animation-delay:.36s}.hero-in>*:nth-child(5){animation-delay:.48s}
+.rv{opacity:0;transform:translateY(28px);transition:opacity .7s,transform .7s cubic-bezier(.2,.8,.2,1)}.rv.in{opacity:1;transform:none}
+/* 3D tilt */
+[data-tilt]{transform-style:preserve-3d;transition:transform .15s ease-out,box-shadow .25s;will-change:transform;box-shadow:0 2px 4px rgba(0,0,0,.05),0 12px 24px -8px rgba(16,185,129,.18)}
+[data-tilt]:hover{box-shadow:0 4px 8px rgba(0,0,0,.06),0 28px 44px -12px rgba(16,185,129,.35)}
+.phone{transform-style:preserve-3d;transition:transform .2s ease-out;box-shadow:0 40px 60px -20px rgba(4,120,87,.5),0 0 0 2px #374151,inset 0 0 0 2px #1F2937}
+/* Abas do app */
+.tab{border-radius:.9rem;padding:.5rem .2rem;font-size:11px;font-weight:700;transition:all .2s;color:#6B7280}
+.tab[aria-selected=true]{background:#10B981;color:#fff;box-shadow:0 4px 0 #047857;transform:translateY(-2px)}
+.screen{display:none;animation:rise .35s forwards}.screen.on{display:block}
+/* Medidor IMC */
+.gauge{height:14px;border-radius:99px;background:linear-gradient(90deg,#60A5FA 0 18%,#10B981 18% 45%,#FBBF24 45% 65%,#F87171 65%);position:relative;box-shadow:inset 0 2px 4px rgba(0,0,0,.2)}
+.mark{position:absolute;top:-8px;width:6px;height:30px;border-radius:4px;background:var(--ink);left:0;transition:left .9s cubic-bezier(.2,.9,.3,1.2);box-shadow:0 4px 8px rgba(0,0,0,.4)}
+.inp{width:100%;margin-top:.25rem;padding:.8rem 1rem;border-radius:1rem;background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:inset 0 2px 4px rgba(0,0,0,.08);transition:box-shadow .2s,border .2s}
+.inp:focus{outline:none;border-color:#10B981;box-shadow:0 0 0 4px rgba(16,185,129,.2)}
+/* FAQ suave */
+.faq-b{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s}.faq-b>div{overflow:hidden}
+.open .faq-b{grid-template-rows:1fr}.open .chev{transform:rotate(180deg)}.chev{transition:transform .3s}
+#bar{position:fixed;top:0;left:0;height:4px;width:0;background:linear-gradient(90deg,#10B981,#FBBF24);z-index:60;border-radius:0 4px 4px 0}
+#sticky{position:fixed;left:0;right:0;bottom:0;padding:.75rem 1rem calc(.75rem + env(safe-area-inset-bottom,0px));z-index:50;transform:translateY(120%);transition:transform .4s;background:var(--card);box-shadow:0 -10px 30px rgba(0,0,0,.12)}
+#sticky.show{transform:none}
+@media(min-width:768px){#sticky{display:none}}
+a:focus-visible,button:focus-visible{outline:3px solid #FBBF24;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rv,.hero-in>*{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+
+<!-- HERO -->
+<header class="relative overflow-hidden soft">
+  <span class="float absolute text-5xl left-[6%] top-24 opacity-70 select-none" aria-hidden="true">🥬</span>
+  <span class="float2 absolute text-5xl right-[8%] top-16 opacity-70 select-none" aria-hidden="true">🍋</span>
+  <span class="float absolute text-4xl right-[30%] bottom-10 opacity-60 select-none" aria-hidden="true">🍍</span>
+  <div class="relative max-w-5xl mx-auto px-5 py-14 md:py-20 grid md:grid-cols-2 gap-12 items-center">
+    <div class="hero-in text-center md:text-left">
+      <p class="inline-block text-xs font-bold text-emerald-800 bg-emerald-200 rounded-full px-4 py-1 shadow">Programa de desintoxicação em app</p>
+      <h1 class="mt-5 text-4xl md:text-5xl font-extrabold leading-tight">Um plano de 14 dias para reorganizar sua alimentação, no seu celular</h1>
+      <p class="mt-5 text-lg mut">E-books com cardápios e receitas, áudios, vídeos e calculadora de IMC em um só app, no seu ritmo.</p>
+      <div class="mt-8"><a href="#planos" class="btn3d text-lg">Quero acessar o programa</a></div>
+      <p class="mt-5 text-sm mut">Acesso imediato • Pagamento seguro • Garantia de 30 dias</p>
+    </div>
+
+    <!-- App interativo -->
+    <div class="flex flex-col items-center">
+      <div id="phone" class="phone w-64 rounded-[2.5rem] border-[10px] border-gray-900 bg-white overflow-hidden text-gray-800">
+        <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 text-white p-5 pt-6"><p class="text-xs opacity-80">Dia 3 de 14</p><p class="font-bold text-lg">Seu programa de hoje</p>
+          <div class="mt-3 h-2 rounded-full bg-white/30"><div class="h-2 rounded-full bg-amber-300" style="width:21%"></div></div></div>
+        <div class="p-4 h-52 text-sm">
+          <div class="screen on" id="s0"><p class="font-bold mb-2">📖 Livros digitais</p><div class="space-y-2"><div class="bg-emerald-50 rounded-xl p-3">Guia de desintoxicação</div><div class="bg-emerald-50 rounded-xl p-3">Cardápio de 14 dias</div><div class="bg-emerald-50 rounded-xl p-3">Receitas de sucos</div></div></div>
+          <div class="screen" id="s1"><p class="font-bold mb-2">🎧 Áudios</p><div class="bg-emerald-50 rounded-xl p-3 flex items-center gap-3">▶ <div class="flex-1"><div class="h-1.5 bg-emerald-200 rounded"><div class="h-1.5 bg-emerald-500 rounded w-1/3"></div></div><p class="text-xs mt-1">Hábitos do dia • 4:12</p></div></div></div>
+          <div class="screen" id="s2"><p class="font-bold mb-2">▶️ Vídeos</p><div class="rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-700 h-28 flex items-center justify-center text-white text-4xl">▶</div><p class="text-xs mt-2">Suco verde passo a passo</p></div>
+          <div class="screen" id="s3"><p class="font-bold mb-2">⚖️ Meu IMC</p><p class="text-3xl font-extrabold text-emerald-600">22,5</p><p class="text-xs">peso normal</p><div class="gauge mt-4" style="height:10px"><div class="mark" style="left:38%;height:24px;top:-7px"></div></div></div>
+        </div>
+        <div class="grid grid-cols-4 gap-1 p-2 border-t border-gray-100" role="tablist">
+          <button class="tab" role="tab" aria-selected="true" data-s="0">📖<br>Livros</button>
+          <button class="tab" role="tab" aria-selected="false" data-s="1">🎧<br>Áudios</button>
+          <button class="tab" role="tab" aria-selected="false" data-s="2">▶️<br>Vídeos</button>
+          <button class="tab" role="tab" aria-selected="false" data-s="3">⚖️<br>IMC</button>
+        </div>
+      </div>
+      <p class="text-xs mut mt-4">Toque nas abas para explorar. Substitua por prints reais do app.</p>
+    </div>
+  </div>
+</header>
+
+<!-- BARRA -->
+<section class="card border-x-0">
+  <div class="max-w-5xl mx-auto px-5 py-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm font-medium">
+    <div>📱<br>Direto no app</div><div>⚡<br>Acesso imediato</div><div>📚<br>E-books, áudios e vídeos</div><div>🛡️<br>Garantia de 30 dias</div>
+  </div>
+</section>
+
+<!-- DORES -->
+<section class="max-w-5xl mx-auto px-5 py-20">
+  <h2 class="rv text-3xl md:text-4xl font-extrabold text-center">Sua rotina alimentar anda bagunçada?</h2>
+  <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-6" style="perspective:900px">
+    <div data-tilt class="rv card rounded-2xl p-6"><div class="text-4xl">🍔</div><h3 class="mt-3 font-bold">Excesso de industrializados</h3><p class="text-sm mut mt-1">Dia a dia corrido e pouca comida de verdade.</p></div>
+    <div data-tilt class="rv card rounded-2xl p-6"><div class="text-4xl">🤷</div><h3 class="mt-3 font-bold">Falta de direção</h3><p class="text-sm mut mt-1">Não saber o que comer em cada refeição.</p></div>
+    <div data-tilt class="rv card rounded-2xl p-6"><div class="text-4xl">💧</div><h3 class="mt-3 font-bold">Pouca água</h3><p class="text-sm mut mt-1">Hidratação esquecida ao longo do dia.</p></div>
+    <div data-tilt class="rv card rounded-2xl p-6"><div class="text-4xl">📉</div><h3 class="mt-3 font-bold">Dietas que não duram</h3><p class="text-sm mut mt-1">Começar, desistir e recomeçar.</p></div>
+  </div>
+</section>
+
+<!-- CONTEÚDO -->
+<section class="soft">
+  <div class="max-w-5xl mx-auto px-5 py-20">
+    <h2 class="rv text-3xl md:text-4xl font-extrabold text-center">Tudo dentro de um só app</h2>
+    <div class="mt-12 grid sm:grid-cols-2 gap-6" style="perspective:900px">
+      <div data-tilt class="rv card rounded-2xl p-7"><div class="text-4xl">📖</div><h3 class="mt-3 font-bold text-lg">Livros digitais</h3><p class="mut mt-1 text-sm">Guia de hábitos, cardápio de 14 dias e receitas de sucos, sopas e saladas. <span class="text-emerald-600">[Confirme os títulos.]</span></p></div>
+      <div data-tilt class="rv card rounded-2xl p-7"><div class="text-4xl">🎧</div><h3 class="mt-3 font-bold text-lg">Áudios</h3><p class="mut mt-1 text-sm">Orientações curtas para ouvir no trajeto ou na rotina.</p></div>
+      <div data-tilt class="rv card rounded-2xl p-7"><div class="text-4xl">▶️</div><h3 class="mt-3 font-bold text-lg">Vídeos</h3><p class="mut mt-1 text-sm">Passo a passo das receitas para acompanhar na cozinha.</p></div>
+      <div data-tilt class="rv card rounded-2xl p-7"><div class="text-4xl">⚖️</div><h3 class="mt-3 font-bold text-lg">Calculadora de IMC</h3><p class="mut mt-1 text-sm">Calcule e acompanhe sua referência. Teste logo abaixo.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- IMC -->
+<section class="max-w-xl mx-auto px-5 py-20">
+  <h2 class="rv text-3xl font-extrabold text-center">Teste a calculadora de IMC</h2>
+  <div data-tilt class="rv card rounded-3xl p-7 mt-8">
+    <div class="grid grid-cols-2 gap-4">
+      <label class="text-sm font-medium">Peso (kg)<input id="peso" type="number" min="20" max="300" step="0.1" class="inp" placeholder="70"></label>
+      <label class="text-sm font-medium">Altura (cm)<input id="altura" type="number" min="100" max="250" class="inp" placeholder="170"></label>
+    </div>
+    <button id="calc" type="button" class="btn3d w-full mt-6">Calcular IMC</button>
+    <div class="mt-8 px-1"><div class="gauge"><div class="mark" id="mark"></div></div>
+      <div class="flex justify-between text-[10px] mut mt-3"><span>Abaixo</span><span>Normal</span><span>Sobrepeso</span><span>Obesidade</span></div></div>
+    <p id="resultado" class="mt-5 text-center text-xl font-extrabold" aria-live="polite"></p>
+    <p class="mt-2 text-xs mut text-center">Referência apenas. Não substitui avaliação médica ou nutricional.</p>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section class="card border-x-0">
+  <div class="max-w-4xl mx-auto px-5 py-20">
+    <h2 class="rv text-3xl font-extrabold text-center">Como começar</h2>
+    <ol class="mt-12 grid md:grid-cols-3 gap-8">
+      <li class="rv text-center"><div class="mx-auto w-16 h-16 rounded-full btn3d !p-0 flex items-center justify-center text-2xl" style="border-radius:50%">1</div><h3 class="font-bold mt-4">Escolha seu acesso</h3><p class="text-sm mut mt-1">Pagamento seguro e liberação imediata.</p></li>
+      <li class="rv text-center"><div class="mx-auto w-16 h-16 rounded-full btn3d !p-0 flex items-center justify-center text-2xl" style="border-radius:50%">2</div><h3 class="font-bold mt-4">Abra o app</h3><p class="text-sm mut mt-1">Receba o login por e-mail e entre.</p></li>
+      <li class="rv text-center"><div class="mx-auto w-16 h-16 rounded-full btn3d !p-0 flex items-center justify-center text-2xl" style="border-radius:50%">3</div><h3 class="font-bold mt-4">Siga os 14 dias</h3><p class="text-sm mut mt-1">Cardápios, áudios e vídeos no seu ritmo.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- DEPOIMENTOS -->
+<section class="max-w-5xl mx-auto px-5 py-20">
+  <h2 class="rv text-3xl md:text-4xl font-extrabold text-center">Quem usou, conta</h2>
+  <p class="text-center text-sm text-amber-800 bg-amber-100 rounded-2xl px-4 py-3 mt-4 max-w-xl mx-auto">Espaço reservado: use somente depoimentos reais, com autorização por escrito.</p>
+  <div class="mt-10 grid md:grid-cols-3 gap-6" style="perspective:900px">
+    <div data-tilt class="rv card rounded-2xl p-6"><div class="text-amber-400">★★★★★</div><p class="mt-3 mut text-sm">“Depoimento real aqui.”</p><p class="mt-4 font-bold text-sm">Nome, idade</p></div>
+    <div data-tilt class="rv card rounded-2xl p-6"><div class="text-amber-400">★★★★★</div><p class="mt-3 mut text-sm">“Depoimento real aqui.”</p><p class="mt-4 font-bold text-sm">Nome, idade</p></div>
+    <div data-tilt class="rv card rounded-2xl p-6"><div class="text-amber-400">★★★★★</div><p class="mt-3 mut text-sm">“Depoimento real aqui.”</p><p class="mt-4 font-bold text-sm">Nome, idade</p></div>
+  </div>
+</section>
+
+<!-- PLANOS -->
+<section id="planos" class="soft">
+  <div class="max-w-5xl mx-auto px-5 py-20">
+    <h2 class="rv text-3xl md:text-4xl font-extrabold text-center">Escolha seu acesso</h2>
+    <p class="text-center mut mt-2">Sem frete: o acesso chega por e-mail logo após o pagamento.</p>
+    <div class="mt-14 grid md:grid-cols-3 gap-6 items-stretch" style="perspective:1000px">
+      <div data-tilt class="rv card rounded-3xl p-7 text-center flex flex-col">
+        <h3 class="font-extrabold text-xl">Essencial</h3><p class="text-sm mut">Para começar</p>
+        <ul class="text-sm mut my-5 space-y-2"><li>📖 Guia + cardápio 14 dias</li><li>⚖️ Calculadora de IMC</li></ul>
+        <p class="text-sm mut">Assinatura mensal</p><p><span class="old">De R$ 37,90/mês</span><span class="off">21% OFF</span></p><p class="price mt-1">R$ 29,90<small>/mês</small></p><p class="text-sm mut">Cancele quando quiser</p>
+        <a href="#" class="btn3d mt-auto js-checkout" data-plan="essencial">Quero o Essencial</a>
+      </div>
+      <div data-tilt class="rv card rounded-3xl p-7 text-center flex flex-col ring-4 ring-emerald-400 md:-translate-y-4 relative">
+        <span class="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-300 text-amber-950 text-xs font-extrabold rounded-full px-5 py-1.5 shadow-lg">Mais escolhido</span>
+        <h3 class="font-extrabold text-xl">Completo</h3><p class="text-sm mut">Tudo do Essencial e mais</p>
+        <ul class="text-sm mut my-5 space-y-2"><li>📖 Todos os e-books</li><li>🎧 Áudios</li><li>▶️ Vídeos</li><li>⚖️ Calculadora de IMC</li></ul>
+        <p class="text-sm mut">Acesso por 12 meses</p><p><span class="old">De 12x de R$ 29,90</span><span class="off">33% OFF</span></p><p class="price mt-1"><small>12x de</small> R$ 19,90</p><p class="text-sm mut">Total: R$ 238,80</p>
+        <a href="#" class="btn3d gold mt-auto js-checkout" data-plan="completo">Quero o Completo</a>
+      </div>
+      <div data-tilt class="rv card rounded-3xl p-7 text-center flex flex-col">
+        <h3 class="font-extrabold text-xl">Vitalício</h3><p class="text-sm mut">Pague uma vez</p>
+        <ul class="text-sm mut my-5 space-y-2"><li>✔ Tudo do Completo</li><li>♾️ Sem prazo</li><li>🆕 Novos conteúdos</li></ul>
+        <p class="text-sm mut">Acesso vitalício</p><p><span class="old">De 12x de R$ 24,90</span><span class="off">12% OFF</span></p><p class="price mt-1"><small>12x de</small> R$ 21,90</p><p class="text-sm mut">Total: R$ 262,80</p>
+        <a href="#" class="btn3d mt-auto js-checkout" data-plan="vitalicio">Quero o Vitalício</a>
+      </div>
+    </div>
+    <p class="text-center text-xs mut mt-8">Parcelamento no cartão de crédito. Valores e condições sujeitos a alteração.</p>
+  </div>
+</section>
+
+<!-- GARANTIA -->
+<section class="max-w-3xl mx-auto px-5 py-20 text-center">
+  <div class="rv mx-auto w-32 h-32 rounded-full bg-gradient-to-br from-amber-200 to-amber-500 flex flex-col items-center justify-center text-amber-950 font-extrabold" style="box-shadow:0 10px 0 #B45309,0 24px 40px rgba(180,83,9,.35),inset 0 3px 0 rgba(255,255,255,.6)"><span class="text-4xl leading-none">30</span><span class="text-xs">dias</span></div>
+  <h2 class="rv mt-10 text-3xl font-extrabold">Garantia de 30 dias</h2>
+  <p class="rv mt-3 mut">Conheça os conteúdos no app e, se não for para você, peça o reembolso em até 30 dias. Sem burocracia.</p>
+</section>
+
+<!-- FAQ -->
+<section class="card border-x-0">
+  <div class="max-w-3xl mx-auto px-5 py-20">
+    <h2 class="rv text-3xl font-extrabold text-center">Perguntas frequentes</h2>
+    <div class="mt-10 space-y-3" id="faq">
+      <div class="rv card rounded-2xl shadow-sm"><button class="w-full flex justify-between items-center p-5 text-left font-bold" aria-expanded="false">Como recebo o acesso?<span class="chev">⌄</span></button><div class="faq-b"><div class="px-5 pb-5 mut text-sm">Após a confirmação do pagamento, você recebe por e-mail o login e o link do app. [Ajuste conforme sua plataforma.]</div></div></div>
+      <div class="rv card rounded-2xl shadow-sm"><button class="w-full flex justify-between items-center p-5 text-left font-bold" aria-expanded="false">Funciona em iPhone e Android?<span class="chev">⌄</span></button><div class="faq-b"><div class="px-5 pb-5 mut text-sm">[Informe as plataformas compatíveis e se há versão web.]</div></div></div>
+      <div class="rv card rounded-2xl shadow-sm"><button class="w-full flex justify-between items-center p-5 text-left font-bold" aria-expanded="false">Preciso de algum produto físico?<span class="chev">⌄</span></button><div class="faq-b"><div class="px-5 pb-5 mut text-sm">Não. O programa é 100% digital e os cardápios usam alimentos comuns de mercado.</div></div></div>
+      <div class="rv card rounded-2xl shadow-sm"><button class="w-full flex justify-between items-center p-5 text-left font-bold" aria-expanded="false">Quem não deve seguir o cardápio?<span class="chev">⌄</span></button><div class="faq-b"><div class="px-5 pb-5 mut text-sm">Gestantes, lactantes, crianças, pessoas com diabetes, problemas gastrointestinais ou em tratamento de saúde devem consultar um médico antes. Em caso de mal-estar, procure atendimento médico.</div></div></div>
+      <div class="rv card rounded-2xl shadow-sm"><button class="w-full flex justify-between items-center p-5 text-left font-bold" aria-expanded="false">Quanto tempo dura o programa?<span class="chev">⌄</span></button><div class="faq-b"><div class="px-5 pb-5 mut text-sm">O cardápio é de 14 dias. Depois, o ideal é manter uma alimentação equilibrada. Os resultados variam de pessoa para pessoa.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<footer class="bg-gray-900 text-gray-400 text-sm pb-24 md:pb-0">
+  <div class="max-w-5xl mx-auto px-5 py-10 text-center">
+    <nav class="flex flex-wrap justify-center gap-5 mb-5"><a href="#" class="hover:text-white">Termos de Uso</a><a href="#" class="hover:text-white">Política de Privacidade</a><a href="#" class="hover:text-white">Isenção de Responsabilidade</a></nav>
+    <p class="max-w-2xl mx-auto text-xs">Conteúdo educativo e informativo. Não oferece prescrição médica nem substitui diagnóstico ou orientação de médico ou nutricionista. Consulte um profissional antes de iniciar qualquer dieta ou programa de exercícios.</p>
+    <p class="mt-4">© 2026 Detox Body Max. [Razão social e CNPJ]</p>
+  </div>
+</footer>
+
+<div id="sticky"><a href="#planos" class="btn3d block">Quero acessar o programa</a></div>
+
+<script>
+var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+// barra de progresso + CTA fixo
+addEventListener('scroll',function(){
+  var h=document.documentElement,p=h.scrollTop/(h.scrollHeight-h.clientHeight);
+  document.getElementById('bar').style.width=(p*100)+'%';
+  document.getElementById('sticky').classList.toggle('show',h.scrollTop>600&&document.getElementById('planos').getBoundingClientRect().top>innerHeight*.6);
+},{passive:true});
+// revelar ao rolar
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.15});
+document.querySelectorAll('.rv').forEach(function(el,i){el.style.transitionDelay=(i%4)*70+'ms';io.observe(el)});
+// inclinação 3D
+if(!reduce)document.querySelectorAll('[data-tilt]').forEach(function(el){
+  el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    el.style.transform='rotateY('+x*10+'deg) rotateX('+(-y*10)+'deg) translateZ(8px)'});
+  el.addEventListener('pointerleave',function(){el.style.transform=''});
+});
+// celular acompanha o mouse
+var ph=document.getElementById('phone');
+if(!reduce)addEventListener('pointermove',function(e){var x=e.clientX/innerWidth-.5,y=e.clientY/innerHeight-.5;ph.style.transform='rotateY('+x*16+'deg) rotateX('+(-y*12)+'deg)'},{passive:true});
+// abas do app
+document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){
+  document.querySelectorAll('.tab').forEach(function(o){o.setAttribute('aria-selected',o===t)});
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id==='s'+t.dataset.s)});
+})});
+// FAQ
+document.querySelectorAll('#faq button').forEach(function(b){b.addEventListener('click',function(){
+  var open=b.parentElement.classList.toggle('open');b.setAttribute('aria-expanded',open)})});
+// IMC com medidor animado
+document.getElementById('calc').addEventListener('click',function(){
+  var p=parseFloat(document.getElementById('peso').value),a=parseFloat(document.getElementById('altura').value)/100,r=document.getElementById('resultado');
+  if(!p||!a){r.textContent='Preencha peso e altura.';return}
+  var imc=p/(a*a),c=imc<18.5?'abaixo do peso':imc<25?'peso normal':imc<30?'sobrepeso':'obesidade';
+  var pos=Math.max(0,Math.min(100,(imc-15)/(40-15)*100));
+  document.getElementById('mark').style.left='calc('+pos+'% - 3px)';
+  var n=0,t=imc,s=setInterval(function(){n+=t/25;if(n>=t){n=t;clearInterval(s)}r.textContent='Seu IMC: '+n.toFixed(1).replace('.',',')+' ('+c+')'},25);
+});
+</script>
+<script>
+// Checkout Stripe: cada plano abre a sessão de pagamento no servidor
+document.querySelectorAll('.js-checkout').forEach(function(a){
+  a.addEventListener('click',async function(e){
+    e.preventDefault();
+    var plan=a.dataset.plan,old=a.textContent;
+    a.textContent='Redirecionando...';a.style.pointerEvents='none';
+    try{
+      var r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:plan})});
+      var j=await r.json();
+      if(!r.ok||!j.url)throw new Error(j.error||('HTTP '+r.status));
+      location.href=j.url;
+    }catch(err){alert('Não foi possível abrir o pagamento: '+err.message);a.textContent=old;a.style.pointerEvents='';}
+  });
+});
+</script>
+</body>
+</html>
