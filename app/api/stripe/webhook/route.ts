@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
-import { getStripe, planFromPriceId } from "@/lib/stripe";
+import { getStripe, getStripeConfig, planFromPriceId } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/server";
 
 // Stripe chama este webhook. Liberação de acesso SOMENTE aqui (nunca na página de sucesso).
 export async function POST(req: Request) {
+  const cfg = await getStripeConfig();
+  const stripe = getStripe(cfg.secretKey);
   const sig = req.headers.get("stripe-signature");
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!sig || !secret) {
+  if (!sig || !cfg.webhookSecret) {
     return NextResponse.json({ error: "webhook não configurado" }, { status: 500 });
   }
   const raw = await req.text();
-  const stripe = getStripe();
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(raw, sig, secret);
+    event = stripe.webhooks.constructEvent(raw, sig, cfg.webhookSecret);
   } catch {
     return NextResponse.json({ error: "assinatura inválida" }, { status: 400 });
   }
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
           expand: ["line_items.data.price"],
         });
         const priceId = full.line_items?.data?.[0]?.price?.id;
-        plan = planFromPriceId(priceId);
+        plan = planFromPriceId(priceId, cfg.prices);
         // Preço de plano mas com metadata explícita tem prioridade
         if (plan && session.metadata?.plan && ["essencial", "completo", "vitalicio"].includes(session.metadata.plan)) {
           plan = session.metadata.plan;

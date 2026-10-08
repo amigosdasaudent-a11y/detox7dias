@@ -12,6 +12,7 @@ const ITEMS = [
   { href: "/admin/blog", label: "Blog", icon: "📝" },
   { href: "/admin/loja", label: "Loja", icon: "🛍" },
   { href: "/admin/usuarios", label: "Usuários", icon: "👥" },
+  { href: "/admin/pagamentos", label: "Pagamentos", icon: "💳" },
   { href: "/inicio", label: "Ver app", icon: "👁" },
 ];
 

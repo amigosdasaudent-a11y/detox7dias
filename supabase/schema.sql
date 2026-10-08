@@ -266,3 +266,14 @@ drop policy if exists "collections_read" on collections;
 create policy "collections_read" on collections for select using (published = true or is_admin());
 drop policy if exists "collections_admin" on collections;
 create policy "collections_admin" on collections for all using (is_admin());
+
+-- =============================================
+-- Configurações sensíveis (settings) - ver migrations/004_settings.sql
+-- RLS ativo SEM policies: só service_role (servidor) acessa.
+-- =============================================
+create table if not exists settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz default now()
+);
+alter table settings enable row level security;

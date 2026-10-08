@@ -5,18 +5,21 @@ import Link from "next/link";
 
 export default function AdminDashboard() {
   const [counts, setCounts] = useState({ banners: 0, produtos: 0, conteudos: 0, quiz: 0, blog: 0, loja: 0, usuarios: 0 });
+  const [payMode, setPayMode] = useState("...");
 
   useEffect(() => {
     (async () => {
-      const [b, t, c, q, p, s] = await Promise.all([
+      const [b, t, c, q, p, s, pay] = await Promise.all([
         fetch("/api/admin/banners").then((r) => (r.ok ? r.json() : { banners: [] })),
         fetch("/api/admin/collections").then((r) => (r.ok ? r.json() : { collections: [] })),
         fetch("/api/admin/contents").then((r) => (r.ok ? r.json() : { contents: [] })),
         fetch("/api/admin/quiz").then((r) => (r.ok ? r.json() : { questions: [] })),
         fetch("/api/admin/posts").then((r) => (r.ok ? r.json() : { posts: [] })),
         fetch("/api/admin/store").then((r) => (r.ok ? r.json() : { products: [] })),
+        fetch("/api/admin/payments").then((r) => (r.ok ? r.json() : { mode: "test" })),
       ]);
       if (b.banners === undefined && b.error) return (window.location.href = "/admin/login");
+      setPayMode(pay.mode === "live" ? "LIVE" : "TESTE");
       setCounts({
         banners: b.banners?.length || 0,
         produtos: t.collections?.length || 0,
@@ -35,6 +38,7 @@ export default function AdminDashboard() {
     { href: "/admin/conteudos", title: "Conteúdos", count: counts.conteudos, desc: "E-books, áudios e vídeos", action: "+ Novo Conteúdo" },
     { href: "/admin/quiz", title: "Quiz", count: counts.quiz, desc: "Perguntas de entrada", action: "+ Nova Pergunta" },
     { href: "/admin/blog", title: "Blog", count: counts.blog, desc: "Artigos", action: "+ Novo Artigo" },
+    { href: "/admin/pagamentos", title: "Pagamentos", count: payMode, desc: "Stripe teste/live", action: "Configurar" },
     { href: "/admin/loja", title: "Loja", count: counts.loja, desc: "Produtos WhatsApp/externos", action: "+ Novo Produto" },
     { href: "/admin/usuarios", title: "Usuários", count: counts.usuarios, desc: "Liberar e revogar acessos", action: "Gerenciar" },
   ];
