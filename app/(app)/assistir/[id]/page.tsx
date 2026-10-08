@@ -46,7 +46,7 @@ export default async function AssistirPage({
   const isAudio = content.type === "audio";
 
   return (
-    <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
+    <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:px-8">
       <a href="/inicio" className="text-sm text-neutral-500">← Início</a>
       <h1 className="mt-2 text-2xl font-bold">{content.title}</h1>
       {content.description && (

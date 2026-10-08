@@ -14,19 +14,39 @@ export default function BannerCarousel({
     return () => clearInterval(t);
   }, [images.length]);
   if (images.length === 0) return null;
+  const prev = () => setI((v) => (v - 1 + images.length) % images.length);
+  const next = () => setI((v) => (v + 1) % images.length);
   const cur = images[i];
   const img = (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={cur.src} alt="Banner" className="h-44 w-full rounded-3xl object-cover shadow" />
+    <img src={cur.src} alt="Banner" className="h-56 w-full rounded-3xl object-cover shadow md:h-72" />
   );
   return (
-    <div>
+    <div className="relative">
       {cur.link ? (
         <a href={cur.link} target="_blank" rel="noreferrer">
           {img}
         </a>
       ) : (
         img
+      )}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={prev}
+            aria-label="Banner anterior"
+            className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-xl text-white"
+          >
+            ‹
+          </button>
+          <button
+            onClick={next}
+            aria-label="Próximo banner"
+            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-xl text-white"
+          >
+            ›
+          </button>
+        </>
       )}
       {images.length > 1 && (
         <div className="mt-2 flex justify-center gap-1">

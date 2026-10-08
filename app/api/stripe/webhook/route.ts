@@ -58,6 +58,7 @@ export async function POST(req: Request) {
       let userId = existing.users.find(
         (u) => u.email?.toLowerCase() === email
       )?.id;
+      let isNew = false;
       if (!userId) {
         const { data: created, error } = await supabase.auth.admin.createUser({
           email,
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
         });
         if (error) throw error;
         userId = created.user.id;
+        isNew = true;
       }
 
       // Libera acesso (pagamento único = vitalício por padrão; ajuste expires_at se quiser prazo)
@@ -83,11 +85,12 @@ export async function POST(req: Request) {
       );
       if (entErr) throw entErr;
 
-      // Sem Resend por agora: envia link mágico do Supabase para definir senha/acessar
-      await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/inicio` },
-      });
+      // Convite para definir a senha (conta nova). Sem link mágico.
+      if (isNew) {
+        await supabase.auth.admin.inviteUserByEmail(email, {
+          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/inicio`,
+        });
+      }
     }
 
     if (event.type === "invoice.paid") {

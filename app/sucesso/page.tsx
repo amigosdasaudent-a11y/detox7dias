@@ -6,11 +6,11 @@ export default function SucessoPage() {
       <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow">
         <h1 className="text-2xl font-bold">Pagamento confirmado! 🎉</h1>
         <p className="mt-2 text-sm text-neutral-600">
-          Enviamos um link de acesso para o e-mail usado no checkout. Clique
-          nele para definir sua senha e entrar no app.
+          Enviamos um convite para o e-mail usado no checkout. Abra-o para
+          definir sua senha e entrar no app.
         </p>
         <p className="mt-2 text-xs text-neutral-500">
-          Não achou? Veja o spam ou use o link mágico na tela de login.
+          Não achou? Veja o spam. Depois entre com e-mail e senha.
         </p>
         <Link
           href="/login"
