@@ -48,6 +48,7 @@ export default function ConteudosPage() {
   const [file, setFile] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const [editing, setEditing] = useState<Content | null>(null);
+  const [eType, setEType] = useState("video");
   const [eTitle, setETitle] = useState("");
   const [eDesc, setEDesc] = useState("");
   const [eUrl, setEUrl] = useState("");
@@ -104,6 +105,7 @@ export default function ConteudosPage() {
 
   function startEdit(c: Content) {
     setEditing(c);
+    setEType(c.type);
     setETitle(c.title);
     setEDesc(c.description || "");
     setEUrl(c.external_url || "");
@@ -121,6 +123,7 @@ export default function ConteudosPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: editing.id,
+        type: eType,
         title: eTitle,
         description: eDesc || null,
         external_url: eUrl || null,
@@ -232,23 +235,56 @@ export default function ConteudosPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <form onSubmit={saveEdit} className="flex max-h-[90vh] w-full max-w-lg flex-col gap-3 overflow-y-auto rounded-2xl bg-white p-6 shadow">
             <h2 className="font-bold">Editar conteúdo</h2>
-            <input className="rounded-xl border px-4 py-2" placeholder="Título" required value={eTitle} onChange={(e) => setETitle(e.target.value)} />
-            <textarea className="rounded-xl border px-4 py-2" placeholder="Descrição" value={eDesc} onChange={(e) => setEDesc(e.target.value)} />
-            <input className="rounded-xl border px-4 py-2" placeholder="URL externa (YouTube/Vimeo/Gumlet)" value={eUrl} onChange={(e) => setEUrl(e.target.value)} />
-            <div className="flex gap-2">
-              <input className="w-full rounded-xl border px-4 py-2" placeholder="Categoria" value={eCategory} onChange={(e) => setECategory(e.target.value)} />
-              <select className="rounded-xl border px-4 py-2" value={ePlan} onChange={(e) => setEPlan(e.target.value)}>
-                <option value="essencial">Essencial</option>
-                <option value="completo">Completo</option>
-                <option value="vitalicio">Vitalício</option>
-              </select>
+            <div>
+              <p className="mb-1 text-sm font-semibold">Tipo de conteúdo</p>
+              <div className="flex gap-2">
+                {(["ebook", "audio", "video"] as const).map((t) => (
+                  <button
+                    type="button"
+                    key={t}
+                    onClick={() => setEType(t)}
+                    className={`rounded-full px-4 py-1 text-sm ${eType === t ? "bg-[#FF4D8D] text-white" : "bg-neutral-100"}`}
+                  >
+                    {t === "ebook" ? "📖 E-book (PDF)" : t === "audio" ? "🎧 Áudio (MP3)" : "▶️ Vídeo"}
+                  </button>
+                ))}
+              </div>
             </div>
-            <select className="rounded-xl border px-4 py-2" value={eCollection} onChange={(e) => setECollection(e.target.value)}>
-              <option value="">Sem produto</option>
-              {collections.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
-            </select>
+            <label className="text-sm font-semibold">
+              Título
+              <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="Título" required value={eTitle} onChange={(e) => setETitle(e.target.value)} />
+            </label>
+            <label className="text-sm font-semibold">
+              Descrição
+              <textarea className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="Descrição" value={eDesc} onChange={(e) => setEDesc(e.target.value)} />
+            </label>
+            <label className="text-sm font-semibold">
+              URL do vídeo (YouTube, Vimeo ou Gumlet — só para vídeos por link)
+              <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="https://..." value={eUrl} onChange={(e) => setEUrl(e.target.value)} />
+            </label>
+            <div className="flex gap-2">
+              <label className="w-full text-sm font-semibold">
+                Categoria
+                <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="Categoria" value={eCategory} onChange={(e) => setECategory(e.target.value)} />
+              </label>
+              <label className="text-sm font-semibold">
+                Plano mínimo
+                <select className="mt-1 rounded-xl border px-4 py-2 font-normal" value={ePlan} onChange={(e) => setEPlan(e.target.value)}>
+                  <option value="essencial">Essencial</option>
+                  <option value="completo">Completo</option>
+                  <option value="vitalicio">Vitalício</option>
+                </select>
+              </label>
+            </div>
+            <label className="text-sm font-semibold">
+              Produto (em qual produto fica esta aula?)
+              <select className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" value={eCollection} onChange={(e) => setECollection(e.target.value)}>
+                <option value="">Sem produto</option>
+                {collections.map((c) => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+              </select>
+            </label>
             <div className="flex gap-2">
               <button disabled={loading} className="rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white disabled:opacity-50">
                 Salvar
