@@ -72,17 +72,24 @@ export default function BannersPage() {
       <a href="/admin" className="text-sm text-neutral-500">← Painel</a>
       <h1 className="mt-2 text-2xl font-bold">Banners</h1>
       <form onSubmit={add} className="mt-4 rounded-3xl bg-white p-6 shadow flex flex-col gap-3">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        />
-        <input
-          className="rounded-xl border px-4 py-2"
-          placeholder="Link de destino (opcional)"
-          value={link}
-          onChange={(e) => setLink(e.target.value)}
-        />
+        <label className="text-sm font-semibold">
+          1. Imagem do banner (sobe para o armazenamento)
+          <input
+            type="file"
+            accept="image/*"
+            className="mt-1 block font-normal"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
+        </label>
+        <label className="text-sm font-semibold">
+          2. Para onde vai quando o cliente clica (opcional, pode deixar vazio)
+          <input
+            className="mt-1 w-full rounded-xl border px-4 py-2 font-normal"
+            placeholder="https://..."
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+          />
+        </label>
         <button disabled={loading} className="rounded-full bg-[#FF4D8D] py-2 font-semibold text-white disabled:opacity-50">
           {loading ? "Enviando..." : "Salvar banner"}
         </button>
