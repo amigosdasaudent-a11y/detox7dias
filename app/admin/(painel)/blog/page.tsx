@@ -11,13 +11,8 @@ type Post = {
 };
 
 async function upload(file: File): Promise<string> {
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("bucket", "covers");
-  const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error || "upload falhou");
-  return json.path as string;
+  const { uploadAdminFile } = await import("@/lib/admin-upload");
+  return uploadAdminFile(file, "covers");
 }
 
 export default function BlogAdminPage() {

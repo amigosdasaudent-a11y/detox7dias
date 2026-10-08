@@ -27,13 +27,8 @@ const TYPE_BADGE: Record<string, string> = {
 };
 
 async function upload(file: File, bucket: string): Promise<string> {
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("bucket", bucket);
-  const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error || "upload falhou");
-  return json.path as string;
+  const { uploadAdminFile } = await import("@/lib/admin-upload");
+  return uploadAdminFile(file, bucket);
 }
 
 export default function ConteudosPage() {
