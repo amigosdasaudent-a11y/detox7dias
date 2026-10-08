@@ -28,7 +28,7 @@ export default async function LojaPage() {
       {(products || []).length === 0 && (
         <p className="mt-4 text-sm text-neutral-500">Nenhum produto à venda no momento.</p>
       )}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
         {(products || []).map((p) => {
           const cover = imgs.get(p.id);
           return (

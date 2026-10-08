@@ -47,7 +47,7 @@ export default function AdminDashboard() {
     <div className="mx-auto w-full max-w-5xl px-6 py-8">
       <h1 className="text-2xl font-extrabold">Detox Body Max</h1>
       <p className="text-sm text-neutral-500">Gerencie o conteúdo do aplicativo.</p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4">
         {cards.map((c) => (
           <div key={c.href} className="rounded-2xl bg-white p-6 shadow">
             <div className="flex items-center justify-between">

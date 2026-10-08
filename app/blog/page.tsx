@@ -29,7 +29,7 @@ export default async function BlogPage() {
       {(posts || []).length === 0 && (
         <p className="mt-4 text-sm text-neutral-500">Nenhum artigo publicado ainda.</p>
       )}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4">
         {(posts || []).map((p) => {
           const img = covers.get(p.slug);
           return (
