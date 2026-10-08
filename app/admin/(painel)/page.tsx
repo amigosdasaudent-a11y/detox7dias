@@ -4,16 +4,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
-  const [counts, setCounts] = useState({ banners: 0, produtos: 0, conteudos: 0, quiz: 0, blog: 0 });
+  const [counts, setCounts] = useState({ banners: 0, produtos: 0, conteudos: 0, quiz: 0, blog: 0, loja: 0, usuarios: 0 });
 
   useEffect(() => {
     (async () => {
-      const [b, t, c, q, p] = await Promise.all([
+      const [b, t, c, q, p, s] = await Promise.all([
         fetch("/api/admin/banners").then((r) => (r.ok ? r.json() : { banners: [] })),
         fetch("/api/admin/collections").then((r) => (r.ok ? r.json() : { collections: [] })),
         fetch("/api/admin/contents").then((r) => (r.ok ? r.json() : { contents: [] })),
         fetch("/api/admin/quiz").then((r) => (r.ok ? r.json() : { questions: [] })),
         fetch("/api/admin/posts").then((r) => (r.ok ? r.json() : { posts: [] })),
+        fetch("/api/admin/store").then((r) => (r.ok ? r.json() : { products: [] })),
       ]);
       if (b.banners === undefined && b.error) return (window.location.href = "/admin/login");
       setCounts({
@@ -22,6 +23,8 @@ export default function AdminDashboard() {
         conteudos: c.contents?.length || 0,
         quiz: q.questions?.length || 0,
         blog: p.posts?.length || 0,
+        loja: s.products?.length || 0,
+        usuarios: 0,
       });
     })();
   }, []);
@@ -32,6 +35,8 @@ export default function AdminDashboard() {
     { href: "/admin/conteudos", title: "Conteúdos", count: counts.conteudos, desc: "E-books, áudios e vídeos", action: "+ Novo Conteúdo" },
     { href: "/admin/quiz", title: "Quiz", count: counts.quiz, desc: "Perguntas de entrada", action: "+ Nova Pergunta" },
     { href: "/admin/blog", title: "Blog", count: counts.blog, desc: "Artigos", action: "+ Novo Artigo" },
+    { href: "/admin/loja", title: "Loja", count: counts.loja, desc: "Produtos WhatsApp/externos", action: "+ Novo Produto" },
+    { href: "/admin/usuarios", title: "Usuários", count: counts.usuarios, desc: "Liberar e revogar acessos", action: "Gerenciar" },
   ];
 
   return (

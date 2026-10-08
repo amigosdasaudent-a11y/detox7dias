@@ -41,16 +41,25 @@ export async function POST(req: Request) {
         session.customer_details?.email?.toLowerCase().trim() || "";
       if (!email) throw new Error("checkout sem e-mail");
 
-      // Busca preço do plano para mapear nível de acesso
-      let plan = session.metadata?.plan || "essencial";
+      // Busca preço do plano para mapear nível de acesso.
+      // Preço desconhecido (ex: item de loja) NÃO libera acesso ao app.
+      let plan: string | null = null;
       try {
         const full = await stripe.checkout.sessions.retrieve(session.id, {
           expand: ["line_items.data.price"],
         });
         const priceId = full.line_items?.data?.[0]?.price?.id;
-        if (priceId) plan = planFromPriceId(priceId);
+        plan = planFromPriceId(priceId);
+        // Preço de plano mas com metadata explícita tem prioridade
+        if (plan && session.metadata?.plan && ["essencial", "completo", "vitalicio"].includes(session.metadata.plan)) {
+          plan = session.metadata.plan;
+        }
       } catch {
-        // mantém plan do metadata
+        return NextResponse.json({ error: "checkout não encontrado" }, { status: 500 });
+      }
+      if (!plan) {
+        await supabase.from("stripe_events").insert({ id: event.id });
+        return NextResponse.json({ ok: true, skipped: "non-plan-price" });
       }
 
       // Cria usuário se não existir (e-mail do checkout)

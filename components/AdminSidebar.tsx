@@ -10,6 +10,8 @@ const ITEMS = [
   { href: "/admin/conteudos", label: "Conteúdos", icon: "📦" },
   { href: "/admin/quiz", label: "Quiz", icon: "❓" },
   { href: "/admin/blog", label: "Blog", icon: "📝" },
+  { href: "/admin/loja", label: "Loja", icon: "🛍" },
+  { href: "/admin/usuarios", label: "Usuários", icon: "👥" },
   { href: "/inicio", label: "Ver app", icon: "👁" },
 ];
 
