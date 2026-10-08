@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 
 export function youtubeId(url: string): string | null {
@@ -43,21 +43,45 @@ export default function VideoPlayer({ src, title }: { src: string; title?: strin
   }
 
   const isHls = src.includes(".m3u8");
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    setFailed(false);
     const video = ref.current;
     if (!video || !isHls) return;
+    const onErr = () => setFailed(true);
+    video.addEventListener("error", onErr);
     // Safari/iOS toca HLS nativo
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = src;
+      return () => video.removeEventListener("error", onErr);
+    }
+    if (!Hls.isSupported()) {
+      setFailed(true);
       return;
     }
-    if (!Hls.isSupported()) return;
     const hls = new Hls();
+    hls.on(Hls.Events.ERROR, (_e, data) => {
+      if (data.fatal) setFailed(true);
+    });
     hls.loadSource(src);
     hls.attachMedia(video);
-    return () => hls.destroy();
+    return () => {
+      video.removeEventListener("error", onErr);
+      hls.destroy();
+    };
   }, [src, isHls]);
+
+  if (failed) {
+    return (
+      <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-2xl bg-black p-6 text-center text-white">
+        <p className="font-semibold">Não foi possível carregar este vídeo aqui.</p>
+        <p className="text-sm text-neutral-300">
+          Tente de novo ou avise o suporte informando o título da aula.
+        </p>
+      </div>
+    );
+  }
 
   return <video ref={ref} className="aspect-video w-full rounded-2xl bg-black" controls playsInline src={isHls ? undefined : src} />;
 }
