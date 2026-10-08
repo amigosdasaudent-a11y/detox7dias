@@ -71,17 +71,28 @@ export default function PagamentosPage() {
 
   async function testConn(m: "test" | "live") {
     setMsg(`Testando ${m}...`);
-    const res = await fetch("/api/admin/payments/test", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: m }),
-    });
-    const json = await res.json();
-    setMsg(
-      res.ok
-        ? `✅ ${m} OK (${json.live ? "LIVE" : "teste"}, ${json.prices} preços lidos).`
-        : `❌ ${json.error}`
-    );
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 25000);
+      const res = await fetch("/api/admin/payments/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: m }),
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      const text = await res.text();
+      let json: { ok?: boolean; live?: boolean; prices?: number; error?: string } = {};
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error(`resposta inválida (HTTP ${res.status}) — aguarde o deploy terminar e tente de novo`);
+      }
+      if (!res.ok) throw new Error(json.error || `erro ${res.status}`);
+      setMsg(`✅ ${m} OK (${json.live ? "LIVE" : "teste"}, ${json.prices} preços lidos).`);
+    } catch (err) {
+      setMsg(`❌ ${err instanceof Error ? err.message : "falha de rede"}`);
+    }
   }
 
   function card(m: "test" | "live", data: Block) {
