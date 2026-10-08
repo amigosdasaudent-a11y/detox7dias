@@ -22,6 +22,7 @@ Repositório local: `F:\Projeto detox\detox-app` (branch `master` → push para 
 - Produção: `https://detox7dias.vercel.app`, env em Vercel → Settings → Environment Variables.
 - Variáveis (nomes; valores só nos cofres): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `JEV_API_KEY`, `JEV_BASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ESSENCIAL`, `STRIPE_PRICE_COMPLETO`, `STRIPE_PRICE_VITALICIO`, `NEXT_PUBLIC_SITE_URL`, `ADMIN_PASSWORD`, `RESEND_API_KEY` (reservada, vazia).
 - `NEXT_PUBLIC_*` exige rebuild/redeploy após alteração.
+- Stripe em runtime lê a tabela `settings` primeiro (`/admin/pagamentos`: modo teste/live, secrets, webhooks e preços por modo); env é só fallback.
 
 ## 3. Mapa de telas e links
 

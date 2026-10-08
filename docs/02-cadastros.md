@@ -102,3 +102,12 @@ Vendas pela Stripe liberam sozinhas (webhook); aqui é só para vendas manuais.
 - **Vídeo preto (Gumlet `.m3u8`)**: troque pela URL **MP4** (ative MP4 no Gumlet) ou por link do **YouTube**.
 - **Cadastrei e não aparece**: confira selo `Visível/Publicado/Ativo` (+ toggle 👁), produto dono correto e, no app, `Ctrl+F5` (cache).
 - **Cliente não entra**: confira em Usuários se há acesso `ativo`; senha se define pelo convite/recuperar senha (não existe mais link mágico).
+
+## 10. Pagamentos — alternar TESTE / LIVE (Stripe)
+
+`/admin` → **Pagamentos**. O modo ativo aparece no dashboard.
+
+1. **Simular vendas sem cobrar**: clique em **🧪 Teste** (modo ativo). Cadastre em "Chaves de TESTE": `Secret key` (`sk_test_...`), `Webhook secret` (`whsec_...` do endpoint de teste no Dashboard Stripe) e os 3 **Price IDs de teste** (crie os preços com Test mode ligado no Stripe). Salve e clique **Testar conexão**.
+2. **Compra de teste**: abra `/vendas.html`, clique no plano e pague com `4242 4242 4242 4242` (qualquer data futura/CVC). O webhook de teste precisa estar encaminhando: `stripe listen --forward-to localhost...` (local) ou endpoint de teste apontando para a URL pública.
+3. **Voltar a cobrar de verdade**: clique em **💳 Live** (as chaves live já estão salvas). Confirme com **Testar conexão**.
+4. Campos vazios ao salvar **mantêm** o valor atual; segredos aparecem só como `••••últimos4`. O mesmo URL de webhook serve nos dois modos, mas cada modo (teste/live) tem seu próprio `whsec` no Dashboard Stripe.
