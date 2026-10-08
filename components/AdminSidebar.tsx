@@ -6,6 +6,7 @@ import LogoutButton from "@/app/admin/LogoutButton";
 
 const ITEMS = [
   { href: "/admin/banners", label: "Banners", icon: "🖼" },
+  { href: "/admin/produtos", label: "Produtos", icon: "📚" },
   { href: "/admin/conteudos", label: "Conteúdos", icon: "📦" },
   { href: "/admin/quiz", label: "Quiz", icon: "❓" },
   { href: "/admin/blog", label: "Blog", icon: "📝" },

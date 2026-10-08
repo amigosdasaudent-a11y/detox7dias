@@ -4,15 +4,6 @@ import BannerCarousel from "@/components/BannerCarousel";
 
 export const dynamic = "force-dynamic";
 
-type Item = {
-  id: string;
-  title: string;
-  description: string | null;
-  cover_path: string | null;
-  file_path: string | null;
-  external_url: string | null;
-};
-
 export default async function InicioPage() {
   const supabase = await createClient();
   const {
@@ -65,11 +56,20 @@ export default async function InicioPage() {
     .select("image_path, link_url")
     .eq("active", true)
     .order("sort_order");
-  const { data: contents } = await supabase
-    .from("contents")
-    .select("id, type, title, description, cover_path, file_path, external_url")
+
+  const { data: products } = await supabase
+    .from("collections")
+    .select("id, title, description, cover_path")
     .eq("published", true)
     .order("sort_order");
+
+  const { data: loose } = await supabase
+    .from("contents")
+    .select("id, type, title")
+    .is("collection_id", null)
+    .eq("published", true)
+    .order("sort_order")
+    .limit(8);
 
   const svc = createServiceClient();
   async function sign(bucket: string, path: string | null): Promise<string | null> {
@@ -86,19 +86,10 @@ export default async function InicioPage() {
     )
   ).filter((b) => b.src);
 
-  const ebooks = (contents || []).filter((c) => c.type === "ebook");
-  const audios = (contents || []).filter((c) => c.type === "audio");
-  const videos = (contents || []).filter((c) => c.type === "video");
-
-  const covers = new Map<string, string>();
-  const files = new Map<string, string>();
-  for (const c of contents || []) {
-    const cov = await sign("covers", c.cover_path);
-    if (cov) covers.set(c.id, cov);
-    if (c.type === "ebook" && c.file_path) {
-      const f = await sign("content-files", c.file_path);
-      if (f) files.set(c.id, f);
-    }
+  const productCovers = new Map<string, string>();
+  for (const p of products || []) {
+    const u = await sign("covers", p.cover_path);
+    if (u) productCovers.set(p.id, u);
   }
 
   return (
@@ -113,74 +104,58 @@ export default async function InicioPage() {
         </div>
       )}
 
-      <Section title="Livros digitais" items={ebooks} covers={covers} files={files} action="Ler" />
-      <Section title="Áudios" items={audios} covers={covers} files={files} action="Ouvir" />
-      <Section title="Vídeos" items={videos} covers={covers} files={files} action="Assistir" />
-
-      {ebooks.length + audios.length + videos.length === 0 && (
-        <p className="mt-6 text-sm text-neutral-500">
-          Nenhum conteúdo publicado ainda.
-        </p>
+      <h2 className="mt-8 text-lg font-bold">Meus produtos</h2>
+      {(products || []).length === 0 && (
+        <p className="mt-2 text-sm text-neutral-500">Nenhum produto publicado ainda.</p>
       )}
-
-      <div className="mt-8 rounded-3xl bg-white p-6 shadow">
-        <h2 className="font-semibold">⚖️ Meu IMC</h2>
-        <p className="text-sm text-neutral-500">
-          Calculadora com IA em breve.
-        </p>
-        <a href="/imc" className="mt-3 inline-block rounded-full bg-[#FF4D8D] px-5 py-1.5 text-sm font-semibold text-white">
-          Calcular
-        </a>
-      </div>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  items,
-  covers,
-  files,
-  action,
-}: {
-  title: string;
-  items: Item[];
-  covers: Map<string, string>;
-  files: Map<string, string>;
-  action: string;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <div className="mt-8">
-      <h2 className="text-lg font-bold">{title}</h2>
-      <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {items.map((c) => {
-          const href = files.get(c.id) || `/assistir/${c.id}`;
-          const external = href.startsWith("http");
-          const cover = covers.get(c.id);
+      <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        {(products || []).map((p) => {
+          const cover = productCovers.get(p.id);
           return (
-            <a
-              key={c.id}
-              href={href}
-              {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-              className="overflow-hidden rounded-2xl bg-white shadow hover:shadow-md"
-            >
+            <a key={p.id} href={`/produto/${p.id}`} className="overflow-hidden rounded-2xl bg-white shadow hover:shadow-md">
               {cover ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={cover} alt={c.title} className="aspect-[3/4] w-full object-cover" />
+                <img src={cover} alt={p.title} className="aspect-[16/10] w-full object-cover" />
               ) : (
-                <div className="flex aspect-[3/4] w-full items-center justify-center bg-gradient-to-br from-[#FF4D8D] to-[#B3124F] text-4xl text-white">
-                  {c.title[0]}
+                <div className="flex aspect-[16/10] w-full items-center justify-center bg-gradient-to-br from-[#FF4D8D] to-[#B3124F] text-4xl text-white">
+                  📚
                 </div>
               )}
-              <div className="p-3">
-                <p className="line-clamp-2 text-sm font-semibold">{c.title}</p>
+              <div className="p-4">
+                <p className="font-bold">{p.title}</p>
+                {p.description && (
+                  <p className="mt-1 line-clamp-2 text-sm text-neutral-500">{p.description}</p>
+                )}
                 <span className="mt-2 block h-1 w-10 rounded-full bg-[#FF4D8D]" />
-                <span className="mt-1 block text-xs font-semibold text-[#FF4D8D]">{action} →</span>
+                <span className="mt-1 block text-xs font-semibold text-[#FF4D8D]">Abrir →</span>
               </div>
             </a>
           );
         })}
+      </div>
+
+      {(loose || []).length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-bold">Avulsos</h2>
+          <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {loose!.map((c) => (
+              <a key={c.id} href={`/assistir/${c.id}`} className="rounded-2xl bg-white p-4 shadow hover:shadow-md">
+                <p className="line-clamp-2 text-sm font-semibold">{c.title}</p>
+                <span className="mt-1 block text-xs font-semibold text-[#FF4D8D]">
+                  {c.type === "ebook" ? "Ler" : c.type === "audio" ? "Ouvir" : "Assistir"} →
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-8 rounded-3xl bg-white p-6 shadow">
+        <h2 className="font-semibold">⚖️ Meu IMC</h2>
+        <p className="text-sm text-neutral-500">Calculadora com IA em breve.</p>
+        <a href="/imc" className="mt-3 inline-block rounded-full bg-[#FF4D8D] px-5 py-1.5 text-sm font-semibold text-white">
+          Calcular
+        </a>
       </div>
     </div>
   );

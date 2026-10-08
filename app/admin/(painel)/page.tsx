@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
-  const [counts, setCounts] = useState({ banners: 0, conteudos: 0, quiz: 0, blog: 0 });
+  const [counts, setCounts] = useState({ banners: 0, produtos: 0, conteudos: 0, quiz: 0, blog: 0 });
 
   useEffect(() => {
     (async () => {
-      const [b, c, q, p] = await Promise.all([
+      const [b, t, c, q, p] = await Promise.all([
         fetch("/api/admin/banners").then((r) => (r.ok ? r.json() : { banners: [] })),
+        fetch("/api/admin/collections").then((r) => (r.ok ? r.json() : { collections: [] })),
         fetch("/api/admin/contents").then((r) => (r.ok ? r.json() : { contents: [] })),
         fetch("/api/admin/quiz").then((r) => (r.ok ? r.json() : { questions: [] })),
         fetch("/api/admin/posts").then((r) => (r.ok ? r.json() : { posts: [] })),
@@ -17,6 +18,7 @@ export default function AdminDashboard() {
       if (b.banners === undefined && b.error) return (window.location.href = "/admin/login");
       setCounts({
         banners: b.banners?.length || 0,
+        produtos: t.collections?.length || 0,
         conteudos: c.contents?.length || 0,
         quiz: q.questions?.length || 0,
         blog: p.posts?.length || 0,
@@ -26,6 +28,7 @@ export default function AdminDashboard() {
 
   const cards = [
     { href: "/admin/banners", title: "Banners", count: counts.banners, desc: "Carrossel do Início", action: "+ Novo Banner" },
+    { href: "/admin/produtos", title: "Produtos", count: counts.produtos, desc: "Capas com aulas dentro", action: "+ Novo Produto" },
     { href: "/admin/conteudos", title: "Conteúdos", count: counts.conteudos, desc: "E-books, áudios e vídeos", action: "+ Novo Conteúdo" },
     { href: "/admin/quiz", title: "Quiz", count: counts.quiz, desc: "Perguntas de entrada", action: "+ Nova Pergunta" },
     { href: "/admin/blog", title: "Blog", count: counts.blog, desc: "Artigos", action: "+ Novo Artigo" },
