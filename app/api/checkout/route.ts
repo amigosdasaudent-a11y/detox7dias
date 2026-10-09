@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStripe, getStripeConfig } from "@/lib/stripe";
+import { getSetting } from "@/lib/settings";
 
 // POST /api/checkout { plan: 'essencial'|'completo'|'vitalicio', email? }
 export async function POST(req: Request) {
@@ -17,6 +18,11 @@ export async function POST(req: Request) {
     );
   }
   const price = plan && cfg.prices[plan];
+  // Override manual do admin: link fixo por plano (vazio = gera checkout automático)
+  if (plan && ["essencial", "completo", "vitalicio"].includes(plan)) {
+    const custom = await getSetting(`sales_link_${plan}`);
+    if (custom) return NextResponse.json({ url: custom, manual: true });
+  }
   if (!price) {
     return NextResponse.json(
       { error: `Plano inválido ou preço (${cfg.mode}) não configurado (plan=${plan})` },

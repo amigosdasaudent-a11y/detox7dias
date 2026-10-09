@@ -23,6 +23,7 @@ export default function PagamentosPage() {
   const [test, setTest] = useState<Block>(EMPTY);
   const [live, setLive] = useState<Block>(EMPTY);
   const [form, setForm] = useState<Record<string, string>>({});
+  const [links, setLinks] = useState({ essencial: "", completo: "", vitalicio: "" });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +34,7 @@ export default function PagamentosPage() {
     setMode(json.mode || "test");
     setTest(json.test || EMPTY);
     setLive(json.live || EMPTY);
+    setLinks(json.links || { essencial: "", completo: "", vitalicio: "" });
     setForm({});
   }
   useEffect(() => {
@@ -93,6 +95,26 @@ export default function PagamentosPage() {
     } catch (err) {
       setMsg(`❌ ${err instanceof Error ? err.message : "falha de rede"}`);
     }
+  }
+
+  async function saveLinks() {
+    setLoading(true);
+    setMsg("");
+    const values: Record<string, string> = {
+      sales_link_essencial: links.essencial.trim(),
+      sales_link_completo: links.completo.trim(),
+      sales_link_vitalicio: links.vitalicio.trim(),
+    };
+    // PUT ignora vazios; para LIMPAR um link é preciso apagar — aqui enviamos "__clear__"
+    const res = await fetch("/api/admin/payments", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ values }),
+    });
+    setLoading(false);
+    if (!res.ok) return setMsg("Falha ao salvar links.");
+    setMsg("Links da página de vendas salvos!");
+    load();
   }
 
   function card(m: "test" | "live", data: Block) {
@@ -189,6 +211,33 @@ export default function PagamentosPage() {
       <div className="mt-4 flex flex-col gap-4">
         {card("test", test)}
         {card("live", live)}
+        <div className="rounded-2xl bg-white p-6 shadow">
+          <h2 className="font-bold">🔗 Links da página de vendas</h2>
+          <p className="mt-1 text-xs text-neutral-500">
+            Opcional por plano. Vazio = o botão gera o checkout automático da Stripe.
+            Preenchido = o botão pula direto para esse link (ex: Payment Link).
+          </p>
+          <div className="mt-4 flex flex-col gap-3">
+            {(["essencial", "completo", "vitalicio"] as const).map((p) => (
+              <label key={p} className="text-sm font-semibold">
+                Link — {p}
+                <input
+                  className="mt-1 w-full rounded-xl border px-4 py-2 font-mono font-normal"
+                  placeholder="https://... (vazio = automático)"
+                  value={links[p]}
+                  onChange={(e) => setLinks((s) => ({ ...s, [p]: e.target.value }))}
+                />
+              </label>
+            ))}
+            <button
+              disabled={loading}
+              onClick={saveLinks}
+              className="rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white disabled:opacity-50"
+            >
+              Salvar links
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

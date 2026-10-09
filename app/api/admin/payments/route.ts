@@ -29,7 +29,16 @@ export async function GET() {
     price_completo: map.get(`stripe_${pfx}_price_completo`) || "",
     price_vitalicio: map.get(`stripe_${pfx}_price_vitalicio`) || "",
   });
-  return NextResponse.json({ mode, test: block("test"), live: block("live") });
+  return NextResponse.json({
+    mode,
+    test: block("test"),
+    live: block("live"),
+    links: {
+      essencial: map.get("sales_link_essencial") || "",
+      completo: map.get("sales_link_completo") || "",
+      vitalicio: map.get("sales_link_vitalicio") || "",
+    },
+  });
 }
 
 const ALLOWED = new Set([
@@ -44,6 +53,9 @@ const ALLOWED = new Set([
   "stripe_live_price_essencial",
   "stripe_live_price_completo",
   "stripe_live_price_vitalicio",
+  "sales_link_essencial",
+  "sales_link_completo",
+  "sales_link_vitalicio",
 ]);
 
 // PUT { mode?, values: { key: value } } — valores vazios mantêm o atual
@@ -64,7 +76,14 @@ export async function PUT(req: Request) {
   for (const [k, v] of Object.entries(values || {})) {
     if (!ALLOWED.has(k)) continue;
     const clean = (v || "").trim();
-    if (!clean) continue; // vazio = mantém
+    if (!clean) {
+      // Links de vendas: vazio explícito LIMPA (volta ao checkout automático).
+      // Segredos/preços: vazio mantém o atual.
+      if (k.startsWith("sales_link_")) {
+        await supabase.from("settings").delete().eq("key", k);
+      }
+      continue;
+    }
     await supabase
       .from("settings")
       .upsert({ key: k, value: clean, updated_at: new Date().toISOString() });
