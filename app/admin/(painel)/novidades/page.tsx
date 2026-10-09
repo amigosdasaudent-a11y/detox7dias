@@ -63,6 +63,14 @@ export default function NovidadesPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setMsg(`✅ Enviados: ${json.sent}. Falhas: ${json.failed}.`);
+      if (json.failures?.length) {
+        setMsg(
+          (prev) =>
+            prev +
+            " Motivos: " +
+            json.failures.map((f) => `${f.phone}: ${f.error}`.slice(0, 120)).join(" | ")
+        );
+      }
       setText("");
       setVideoUrl("");
       setVideoTitle("");
