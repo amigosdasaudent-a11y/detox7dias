@@ -61,9 +61,16 @@ export async function evoQr(cfg: EvoConfig): Promise<{ base64?: string; code?: s
   return { base64: json.data?.qrcode, code: json.data?.code };
 }
 
+// Só dígitos; se for BR sem DDI (10-11 dígitos), prefixa 55.
+export function normalizePhone(number: string): string {
+  const d = String(number || "").replace(/\D/g, "");
+  if ((d.length === 10 || d.length === 11) && !d.startsWith("55")) return `55${d}`;
+  return d;
+}
+
 // POST /send/text { number, text }. number: só dígitos com DDI (ex: 5511999999999).
 export async function evoSendText(cfg: EvoConfig, number: string, text: string) {
-  const to = number.replace(/\D/g, "");
+  const to = normalizePhone(number);
   return evoFetch(cfg, "/send/text", {
     method: "POST",
     body: JSON.stringify({ number: to, text }),
@@ -72,7 +79,7 @@ export async function evoSendText(cfg: EvoConfig, number: string, text: string) 
 
 // POST /send/media { number, type: 'image', url, caption } — imagem com legenda.
 export async function evoSendMedia(cfg: EvoConfig, number: string, imageUrl: string, caption: string) {
-  const to = number.replace(/\D/g, "");
+  const to = normalizePhone(number);
   return evoFetch(cfg, "/send/media", {
     method: "POST",
     body: JSON.stringify({ number: to, type: "image", url: imageUrl, caption }),
@@ -85,7 +92,7 @@ export async function evoSendLink(
   number: string,
   link: { url: string; title?: string; description?: string; text?: string }
 ) {
-  const to = number.replace(/\D/g, "");
+  const to = normalizePhone(number);
   return evoFetch(cfg, "/send/link", {
     method: "POST",
     body: JSON.stringify({ number: to, ...link }),
