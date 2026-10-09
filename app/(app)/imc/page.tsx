@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Hist = {
   id: string;
@@ -107,8 +109,24 @@ export default function ImcPage() {
           <div className="mt-3 h-3.5 rounded-full" style={{ background: "linear-gradient(90deg,#60A5FA 0 18%,#10B981 18% 45%,#FBBF24 45% 65%,#F87171 65%)" }}>
             <div className="h-6 w-1.5 rounded bg-neutral-800" style={{ marginLeft: `calc(${pos}% - 3px)`, marginTop: -5 }} />
           </div>
-          <div className="prose mt-4 max-w-none whitespace-pre-wrap text-sm">
-            {result.plan}
+          <div className="mt-4 text-sm text-neutral-800">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => <p className="mt-3 text-base font-extrabold">🍽 {children}</p>,
+                h2: ({ children }) => <p className="mt-3 text-base font-extrabold">🍽 {children}</p>,
+                h3: ({ children }) => <p className="mt-2 font-bold">✅ {children}</p>,
+                p: ({ children }) => <p className="mt-2 leading-relaxed">{children}</p>,
+                ul: ({ children }) => <ul className="mt-2 flex flex-col gap-1.5">{children}</ul>,
+                ol: ({ children }) => <ol className="mt-2 flex list-decimal flex-col gap-1.5 pl-5">{children}</ol>,
+                li: ({ children }) => <li className="rounded-xl bg-[#FFF5F7] px-3 py-1.5">{children}</li>,
+                strong: ({ children }) => <strong className="font-bold text-neutral-900">{children}</strong>,
+                hr: () => <hr className="my-3 border-neutral-200" />,
+                table: ({ children }) => <div className="overflow-x-auto">{children}</div>,
+              }}
+            >
+              {result.plan}
+            </ReactMarkdown>
           </div>
         </div>
       )}

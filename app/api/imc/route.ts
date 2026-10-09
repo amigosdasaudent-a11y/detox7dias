@@ -129,7 +129,7 @@ export async function POST(req: Request) {
 
   const prompt = `Você é o JEV, assistente de bem-estar do app Detox Body Max. Fale em português do Brasil, acolhedor e objetivo.
 Dados: peso ${w}kg, altura ${h}cm, idade ${age}, sexo ${sex || "não informado"}, objetivo: ${goal || "não informado"}, restrições: ${restrictions || "nenhuma"}. IMC calculado: ${imc} (${classification}). ${quizCtx}
-Gere um plano alimentar de EXEMPLO para 1 dia (café, lanche, almoço, lanche, jantar) com porções simples de alimentos comuns, respeitando restrições.
+Gere um plano alimentar de EXEMPLO para 1 dia, nesta estrutura: para cada refeição (☀️ Café da manhã, 🍎 Lanche da manhã, 🍽 Almoço, 🥜 Lanche da tarde, 🌙 Jantar, 💧 Hidratação) use um item de lista com o nome da refeição em negrito, os alimentos e 1 frase curta do benefício. Termine com uma 💡 Dica e o aviso em negrito. Use SÓ títulos ##, listas com -, negrito ** e emojis — NUNCA tabelas (|), NUNCA tags <br> ou HTML, NUNCA ---.
 Regras: sem promessas de resultado ou prazo; sem jejum, laxantes, diuréticos ou dietas muito restritivas; se IMC abaixo de 18,5, foque em alimentação equilibrada e recomende avaliação profissional, sem sugerir redução; termine com: "Conteúdo informativo. Não substitui médico ou nutricionista." Responda em Markdown curto.${jevNote}`;
 
   try {
