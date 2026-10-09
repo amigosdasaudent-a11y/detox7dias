@@ -296,3 +296,6 @@ drop policy if exists "sub_owner" on subscribers;
 create policy "sub_owner" on subscribers
   for all using (user_id = auth.uid())
   with check (user_id = auth.uid());
+
+-- Provedor de IA do cálculo (migration 007; limite semanal da paga)
+alter table imc_history add column if not exists provider text;

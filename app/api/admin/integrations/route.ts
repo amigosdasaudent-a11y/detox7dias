@@ -14,7 +14,11 @@ function mask(v: string | null): { set: boolean; last4: string } {
   return { set: true, last4: v.slice(-8) };
 }
 
-const ALLOWED = new Set(["evo_url", "evo_key", "evo_instance", "openai_key"]);
+const ALLOWED = new Set([
+  "evo_url", "evo_key", "evo_instance", "openai_key",
+  "ai_groq_key", "ai_groq_model",
+  "ai_custom_key", "ai_custom_base", "ai_custom_model",
+]);
 
 // GET -> credenciais mascaradas + estado da conexão
 export async function GET() {
@@ -29,6 +33,11 @@ export async function GET() {
     evo_key: mask(map.get("evo_key") || null),
     evo_instance: map.get("evo_instance") || "",
     openai: { set: !!map.get("openai_key") },
+    groq: { set: !!map.get("ai_groq_key") },
+    groq_model: map.get("ai_groq_model") || "openai/gpt-oss-120b",
+    custom: { set: !!map.get("ai_custom_key") },
+    custom_base: map.get("ai_custom_base") || "",
+    custom_model: map.get("ai_custom_model") || "",
   };
   try {
     const cfg = await getEvoConfig();

@@ -7,6 +7,10 @@ export default function IntegracoesPage() {
   const [instance, setInstance] = useState("");
   const [keySet, setKeySet] = useState("");
   const [openaiSet, setOpenaiSet] = useState(false);
+  const [groqSet, setGroqSet] = useState(false);
+  const [groqModel, setGroqModel] = useState("openai/gpt-oss-120b");
+  const [customSet, setCustomSet] = useState(false);
+  const [customBase, setCustomBase] = useState("");
   const [form, setForm] = useState<Record<string, string>>({});
   const [state, setState] = useState("...");
   const [evoErr, setEvoErr] = useState("");
@@ -24,6 +28,10 @@ export default function IntegracoesPage() {
     setInstance(json.evo_instance || "");
     setKeySet(json.evo_key?.set ? `••••${json.evo_key.last4}` : "");
     setOpenaiSet(!!json.openai?.set);
+    setGroqSet(!!json.groq?.set);
+    setGroqModel(json.groq_model || "openai/gpt-oss-120b");
+    setCustomSet(!!json.custom?.set);
+    setCustomBase(json.custom_base || "");
     setState(json.evo_state || "desconectado");
     setEvoErr(json.evo_error || "");
     setForm({});
@@ -143,9 +151,56 @@ export default function IntegracoesPage() {
       <div className="mt-4 rounded-2xl bg-white p-6 shadow">
         <h2 className="font-bold">🧠 Inteligência artificial (chat + IMC)</h2>
         <p className="mt-1 text-xs text-neutral-500">
-          Chave OpenAI ({openaiSet ? "salva" : "não salva"}). Alimenta o chat da vendas e o plano do IMC. O JEV continua como guardião das decisões.
+          Ordem automática: <b>1º Groq (grátis) → 2º Extra (grátis) → 3º OpenAI (paga, por último)</b>.
+          Se uma falhar, a próxima entra sozinha. Na calculadora, a paga limita a <b>1x/semana</b>.
+          O JEV continua como guardião das decisões.
         </p>
-        <div className="mt-4 flex gap-2">
+
+        <p className="mt-4 text-sm font-semibold">1. Groq — grátis {groqSet ? "(salva)" : "(não salva)"}</p>
+        <div className="mt-1 flex flex-col gap-2 sm:flex-row">
+          <input
+            type="password"
+            className="w-full rounded-xl border px-4 py-2 font-mono"
+            placeholder="gsk_... (vazio = mantém)"
+            value={form.ai_groq_key || ""}
+            onChange={(e) => set("ai_groq_key", e.target.value)}
+          />
+          <input
+            className="w-full rounded-xl border px-4 py-2 font-mono sm:max-w-[220px]"
+            placeholder="modelo"
+            value={form.ai_groq_model ?? groqModel}
+            onChange={(e) => { set("ai_groq_model", e.target.value); setGroqModel(e.target.value); }}
+          />
+        </div>
+
+        <p className="mt-4 text-sm font-semibold">2. Extra — outra compatível (grátis) {customSet ? "(salva)" : "(não salva)"}</p>
+        <p className="text-xs text-neutral-500">Ex: OpenRouter, DeepSeek. Precisa da URL base + modelo + chave.</p>
+        <div className="mt-1 flex flex-col gap-2">
+          <input
+            className="w-full rounded-xl border px-4 py-2 font-mono"
+            placeholder="URL base: https://openrouter.ai/api/v1"
+            value={form.ai_custom_base ?? customBase}
+            onChange={(e) => { set("ai_custom_base", e.target.value); setCustomBase(e.target.value); }}
+          />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              className="w-full rounded-xl border px-4 py-2 font-mono"
+              placeholder="modelo: ex deepseek/deepseek-chat"
+              value={form.ai_custom_model || ""}
+              onChange={(e) => set("ai_custom_model", e.target.value)}
+            />
+            <input
+              type="password"
+              className="w-full rounded-xl border px-4 py-2 font-mono"
+              placeholder="chave (vazio = mantém)"
+              value={form.ai_custom_key || ""}
+              onChange={(e) => set("ai_custom_key", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <p className="mt-4 text-sm font-semibold">3. OpenAI — paga (último recurso) {openaiSet ? "(salva)" : "(não salva)"}</p>
+        <div className="mt-1 flex gap-2">
           <input
             type="password"
             className="w-full rounded-xl border px-4 py-2 font-mono"
@@ -156,11 +211,15 @@ export default function IntegracoesPage() {
           <button
             disabled={loading}
             onClick={() => {
-              if (form.openai_key) save({ openai_key: form.openai_key }, "IA salva!");
+              const values: Record<string, string> = {};
+              for (const k of ["ai_groq_key", "ai_groq_model", "ai_custom_key", "ai_custom_base", "ai_custom_model", "openai_key"]) {
+                if ((form[k] || "").trim()) values[k] = form[k].trim();
+              }
+              if (Object.keys(values).length) save(values, "IAs salvas!");
             }}
             className="rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white disabled:opacity-50"
           >
-            Salvar
+            Salvar IAs
           </button>
         </div>
       </div>

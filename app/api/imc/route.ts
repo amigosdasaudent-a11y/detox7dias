@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { jevGuardImc } from "@/lib/jev";
-import { aiChat } from "@/lib/ai";
+import { aiChatWithFallback } from "@/lib/ai";
 
 function classify(imc: number): string {
   if (imc < 18.5) return "abaixo do peso";
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       "Você tem menos de 18 anos, então não gero plano alimentar. Procure um pediatra ou nutricionista com seu responsável. Conteúdo informativo, não substitui profissional.";
     await supabase.from("imc_history").insert({
       user_id: user.id, weight_kg: w, height_cm: h, age, sex, goal, restrictions,
-      imc, classification, ai_plan: msg,
+      imc, classification, ai_plan: msg, provider: "regras",
     });
     return NextResponse.json({ imc, classification, plan: msg, blocked: true });
   }
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
       const msg = `${g.guidance || "Por segurança, não vou gerar um plano agora."} Procure um médico ou nutricionista. Conteúdo informativo, não substitui profissional.`;
       await supabase.from("imc_history").insert({
         user_id: user.id, weight_kg: w, height_cm: h, age, sex, goal, restrictions,
-        imc, classification, ai_plan: msg,
+        imc, classification, ai_plan: msg, provider: "regras",
       });
       return NextResponse.json({ imc, classification, plan: msg, blocked: true });
     }
@@ -133,12 +133,29 @@ Gere um plano alimentar de EXEMPLO para 1 dia (café, lanche, almoço, lanche, j
 Regras: sem promessas de resultado ou prazo; sem jejum, laxantes, diuréticos ou dietas muito restritivas; se IMC abaixo de 18,5, foque em alimentação equilibrada e recomende avaliação profissional, sem sugerir redução; termine com: "Conteúdo informativo. Não substitui médico ou nutricionista." Responda em Markdown curto.${jevNote}`;
 
   try {
-    const plan = await aiChat([{ role: "user", content: prompt }]);
+    const { text: plan, provider } = await aiChatWithFallback([{ role: "user", content: prompt }]);
+    // API paga: máximo 1 cálculo por semana (controle de custo)
+    if (provider === "openai") {
+      const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+      const { data: recent } = await supabase
+        .from("imc_history")
+        .select("id")
+        .eq("user_id", user.id)
+        .gte("created_at", weekAgo)
+        .or("provider.eq.openai,provider.is.null")
+        .limit(1);
+      if (recent?.length) {
+        return NextResponse.json(
+          { error: "limite semanal da IA paga atingido (1/semana). Volte em alguns dias — o cálculo básico continua liberado." },
+          { status: 429 }
+        );
+      }
+    }
     await supabase.from("imc_history").insert({
       user_id: user.id, weight_kg: w, height_cm: h, age, sex, goal, restrictions,
-      imc, classification, ai_plan: plan,
+      imc, classification, ai_plan: plan, provider,
     });
-    return NextResponse.json({ imc, classification, plan });
+    return NextResponse.json({ imc, classification, plan, provider });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "falha na IA" },
