@@ -98,9 +98,12 @@ export default function IntegracoesPage() {
             <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="detox" value={form.evo_instance ?? instance} onChange={(e) => set("evo_instance", e.target.value)} />
           </label>
           <label className="text-sm font-semibold">
-            API KEY {keySet ? `(salva ${keySet})` : "(não salva)"}
+            Token da instância {keySet ? `(salvo ${keySet})` : "(não salvo)"}
             <input type="password" className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="vazio = mantém" value={form.evo_key || ""} onChange={(e) => set("evo_key", e.target.value)} />
           </label>
+          <p className="-mt-2 text-xs text-neutral-500">
+            Copie em Evolution GO → Instâncias → Configurações → "Token da Instância" (não é a key global do Portainer).
+          </p>
           <div className="flex flex-wrap gap-2">
             <button
               disabled={loading}

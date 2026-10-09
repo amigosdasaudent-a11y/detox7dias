@@ -33,7 +33,8 @@ export async function GET() {
   try {
     const cfg = await getEvoConfig();
     const st = await evoStatus(cfg);
-    out.evo_state = st.instance?.state || "desconhecido";
+    out.evo_state = st.connected && st.loggedIn ? "open" : "desconectado";
+    out.evo_name = st.name;
   } catch (e) {
     out.evo_state = "desconectado";
     out.evo_error = e instanceof Error ? e.message : "falha";
