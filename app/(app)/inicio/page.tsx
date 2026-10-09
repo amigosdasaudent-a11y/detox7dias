@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import BannerCarousel from "@/components/BannerCarousel";
+import NovidadesCard from "@/components/NovidadesCard";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,8 @@ export default async function InicioPage() {
           <BannerCarousel images={bannerImgs} />
         </div>
       )}
+
+      <NovidadesCard />
 
       <h2 className="mt-8 text-lg font-bold">Meus produtos</h2>
       {(products || []).length === 0 && (

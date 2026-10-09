@@ -69,3 +69,25 @@ export async function evoSendText(cfg: EvoConfig, number: string, text: string) 
     body: JSON.stringify({ number: to, text }),
   });
 }
+
+// POST /send/media { number, type: 'image', url, caption } — imagem com legenda.
+export async function evoSendMedia(cfg: EvoConfig, number: string, imageUrl: string, caption: string) {
+  const to = number.replace(/\D/g, "");
+  return evoFetch(cfg, "/send/media", {
+    method: "POST",
+    body: JSON.stringify({ number: to, type: "image", url: imageUrl, caption }),
+  });
+}
+
+// POST /send/link { number, url, title, description, text } — link com prévia rica.
+export async function evoSendLink(
+  cfg: EvoConfig,
+  number: string,
+  link: { url: string; title?: string; description?: string; text?: string }
+) {
+  const to = number.replace(/\D/g, "");
+  return evoFetch(cfg, "/send/link", {
+    method: "POST",
+    body: JSON.stringify({ number: to, ...link }),
+  });
+}
