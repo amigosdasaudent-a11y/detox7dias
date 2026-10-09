@@ -75,8 +75,17 @@ export async function POST(req: Request) {
   try {
     const cfg = await getEvoConfig();
     if (action === "qr") {
-      const qr = await evoQr(cfg);
-      return NextResponse.json({ base64: qr.base64 || null });
+      try {
+        const qr = await evoQr(cfg);
+        return NextResponse.json({ base64: qr.base64 || null });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "";
+        // Já pareado: QR desnecessário = conectado
+        if (/already logged in/i.test(msg)) {
+          return NextResponse.json({ connected: true });
+        }
+        throw e;
+      }
     }
     if (action === "send") {
       if (!to || !text) return NextResponse.json({ error: "número/texto?" }, { status: 400 });

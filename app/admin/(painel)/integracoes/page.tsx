@@ -9,6 +9,7 @@ export default function IntegracoesPage() {
   const [openaiSet, setOpenaiSet] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
   const [state, setState] = useState("...");
+  const [evoErr, setEvoErr] = useState("");
   const [qr, setQr] = useState("");
   const [to, setTo] = useState("");
   const [text, setText] = useState("");
@@ -24,6 +25,7 @@ export default function IntegracoesPage() {
     setKeySet(json.evo_key?.set ? `••••${json.evo_key.last4}` : "");
     setOpenaiSet(!!json.openai?.set);
     setState(json.evo_state || "desconectado");
+    setEvoErr(json.evo_error || "");
     setForm({});
   }
   useEffect(() => {
@@ -54,6 +56,10 @@ export default function IntegracoesPage() {
       body: JSON.stringify({ action: "qr" }),
     });
     const json = await res.json();
+    if (json.connected) {
+      setState("open");
+      return setMsg("✅ WhatsApp já conectado! Sem QR.");
+    }
     if (!res.ok) return setMsg(`❌ ${json.error}`);
     if (json.base64) {
       setQr(json.base64.startsWith("data:") ? json.base64 : `data:image/png;base64,${json.base64}`);
@@ -88,6 +94,11 @@ export default function IntegracoesPage() {
             {state}
           </span>
         </div>
+        {state !== "open" && evoErr && (
+          <p className="mt-2 text-xs text-red-600">
+            {evoErr} <button onClick={() => load()} className="font-bold underline">Recarregar</button>
+          </p>
+        )}
         <div className="mt-4 flex flex-col gap-3">
           <label className="text-sm font-semibold">
             URL do servidor
