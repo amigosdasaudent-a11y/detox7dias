@@ -19,8 +19,12 @@ export default function ImcPage() {
   const [h, setH] = useState("");
   const [age, setAge] = useState("");
   const [sex, setSex] = useState("feminino");
-  const [goal, setGoal] = useState("");
-  const [restr, setRestr] = useState("");
+  const [goalSel, setGoalSel] = useState("Organizar a rotina alimentar");
+  const [goalCustom, setGoalCustom] = useState("");
+  const [restrSel, setRestrSel] = useState("Nenhuma");
+  const [restrCustom, setRestrCustom] = useState("");
+  const goal = goalSel === "outro" ? goalCustom : goalSel;
+  const restr = restrSel === "outra" ? restrCustom : restrSel === "Nenhuma" ? "" : restrSel;
   const [result, setResult] = useState<{ imc: number; classification: string; plan: string } | null>(null);
   const [hist, setHist] = useState<Hist[]>([]);
   const [msg, setMsg] = useState("");
@@ -90,11 +94,31 @@ export default function ImcPage() {
         </div>
         <label className="mt-3 block text-sm font-semibold">
           Objetivo
-          <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="Ex: organizar a rotina alimentar" value={goal} onChange={(e) => setGoal(e.target.value)} />
+          <select className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" value={goalSel} onChange={(e) => setGoalSel(e.target.value)}>
+            <option>Organizar a rotina alimentar</option>
+            <option>Criar hábitos mais saudáveis</option>
+            <option>Ter mais energia</option>
+            <option>Seguir um cardápio pronto</option>
+            <option>Reduzir medidas</option>
+            <option value="outro">Outro (digitar)</option>
+          </select>
+          {goalSel === "outro" && (
+            <input className="mt-2 w-full rounded-xl border px-4 py-2 font-normal" placeholder="Qual seu objetivo?" value={goalCustom} onChange={(e) => setGoalCustom(e.target.value)} />
+          )}
         </label>
         <label className="mt-3 block text-sm font-semibold">
           Restrições alimentares
-          <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="Ex: sem lactose" value={restr} onChange={(e) => setRestr(e.target.value)} />
+          <select className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" value={restrSel} onChange={(e) => setRestrSel(e.target.value)}>
+            <option>Nenhuma</option>
+            <option>Vegetariano</option>
+            <option>Vegano</option>
+            <option>Sem lactose</option>
+            <option>Sem glúten</option>
+            <option value="outra">Outra (digitar)</option>
+          </select>
+          {restrSel === "outra" && (
+            <input className="mt-2 w-full rounded-xl border px-4 py-2 font-normal" placeholder="Qual restrição?" value={restrCustom} onChange={(e) => setRestrCustom(e.target.value)} />
+          )}
         </label>
         <button disabled={loading} className="mt-4 w-full rounded-full bg-[#FF4D8D] py-2 font-semibold text-white disabled:opacity-50">
           {loading ? "Calculando..." : "Calcular IMC e gerar plano"}
