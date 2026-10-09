@@ -38,6 +38,7 @@ export async function POST(req: Request) {
     mode,
     line_items: [{ price, quantity: 1 }],
     customer_email: email || undefined,
+    phone_number_collection: { enabled: true },
     success_url: `${site}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${site}/#planos`,
     metadata: { plan: plan! },

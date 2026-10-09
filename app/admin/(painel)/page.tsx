@@ -39,6 +39,7 @@ export default function AdminDashboard() {
     { href: "/admin/quiz", title: "Quiz", count: counts.quiz, desc: "Perguntas de entrada", action: "+ Nova Pergunta" },
     { href: "/admin/blog", title: "Blog", count: counts.blog, desc: "Artigos", action: "+ Novo Artigo" },
     { href: "/admin/pagamentos", title: "Pagamentos", count: payMode, desc: "Stripe teste/live", action: "Configurar" },
+    { href: "/admin/integracoes", title: "Integrações", count: "WA+IA", desc: "Evolution WhatsApp e OpenAI", action: "Conectar" },
     { href: "/admin/loja", title: "Loja", count: counts.loja, desc: "Produtos WhatsApp/externos", action: "+ Novo Produto" },
     { href: "/admin/usuarios", title: "Usuários", count: counts.usuarios, desc: "Liberar e revogar acessos", action: "Gerenciar" },
   ];

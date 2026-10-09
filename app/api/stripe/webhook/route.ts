@@ -34,12 +34,13 @@ export async function POST(req: Request) {
       const session = event.data.object as {
         id: string;
         customer?: string;
-        customer_details?: { email?: string };
+        customer_details?: { email?: string; phone?: string };
         metadata?: { plan?: string };
       };
       const email =
         session.customer_details?.email?.toLowerCase().trim() || "";
       if (!email) throw new Error("checkout sem e-mail");
+      const phone = (session.customer_details?.phone || "").replace(/\D/g, "") || null;
 
       // Busca preço do plano para mapear nível de acesso.
       // Preço desconhecido (ex: item de loja) NÃO libera acesso ao app.
@@ -83,6 +84,7 @@ export async function POST(req: Request) {
         {
           user_id: userId,
           email,
+          phone,
           stripe_customer_id:
             typeof session.customer === "string" ? session.customer : null,
           stripe_session_id: session.id,

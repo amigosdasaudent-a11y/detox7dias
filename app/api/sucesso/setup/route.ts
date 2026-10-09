@@ -45,6 +45,7 @@ export async function POST(req: Request) {
     .toLowerCase()
     .trim();
   if (!email) return NextResponse.json({ error: "sessão sem e-mail" }, { status: 400 });
+  const phone = (session.customer_details?.phone || "").replace(/\D/g, "") || null;
 
   const priceId = session.line_items?.data?.[0]?.price?.id;
   const plan =
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
     {
       user_id: userId,
       email,
+      phone,
       stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
       stripe_session_id: session.id,
       plan,
