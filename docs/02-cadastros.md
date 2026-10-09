@@ -82,7 +82,7 @@ Onde aparece: `/loja` (cards com foto, preço e botão que abre WhatsApp/externo
 - **Buscar** por e-mail; cada linha mostra plano e status.
 - **Revogar** (corta o acesso) / **Reativar** (último acesso).
 
-Vendas pela Stripe liberam sozinhas (webhook); aqui é só para vendas manuais.
+Vendas pela Stripe liberam sozinhas (webhook); aqui é só para vendas manuais. Quem pagou define a senha direto no `/sucesso` (verificado como pago); o e-mail de convite é só backup.
 
 ## 8. Conferência rápida (após cada cadastro)
 
@@ -108,6 +108,15 @@ Vendas pela Stripe liberam sozinhas (webhook); aqui é só para vendas manuais.
 `/admin` → **Pagamentos**. O modo ativo aparece no dashboard.
 
 1. **Simular vendas sem cobrar**: clique em **🧪 Teste** (modo ativo). Cadastre em "Chaves de TESTE": `Secret key` (`sk_test_...`), `Webhook secret` (`whsec_...` do endpoint de teste no Dashboard Stripe) e os 3 **Price IDs de teste** (crie os preços com Test mode ligado no Stripe). Salve e clique **Testar conexão**.
-2. **Compra de teste**: abra `/vendas.html`, clique no plano e pague com `4242 4242 4242 4242` (qualquer data futura/CVC). O webhook de teste precisa estar encaminhando: `stripe listen --forward-to localhost...` (local) ou endpoint de teste apontando para a URL pública.
+2. **Compra de teste**: abra `/vendas.html`, clique no plano e pague com `4242 4242 4242 4242` (qualquer data futura/CVC). O endpoint de teste já aponta para a URL pública — sem CLI. Depois defina a senha no `/sucesso`.
 3. **Voltar a cobrar de verdade**: clique em **💳 Live** (as chaves live já estão salvas). Confirme com **Testar conexão**.
 4. Campos vazios ao salvar **mantêm** o valor atual; segredos aparecem só como `••••últimos4`. O mesmo URL de webhook serve nos dois modos, mas cada modo (teste/live) tem seu próprio `whsec` no Dashboard Stripe.
+5. **Não troque os tipos**: Secret = `sk_test_...`/`sk_live_...` (nunca `pk_...`, que é pública); Webhook = `whsec_...` (nunca `sk_...`); Prices do **mesmo modo** (teste com teste). Valor errado dá erro explícito no Testar conexão.
+
+## 11. Links da página de vendas (override por plano)
+
+`/admin` → **Pagamentos** → card **🔗 Links da página de vendas**.
+
+- Um campo por plano (essencial/completo/vitalício). **Vazio** = botão gera o checkout automático da Stripe (respeita o modo teste/live). **Preenchido** = botão pula direto para a URL (ex: Payment Link montado no dashboard).
+- Para voltar ao automático, apague o campo e salve.
+- Atenção: link fixo ignora o modo (teste sempre teste, live sempre live) e só libera acesso sozinho se o destino usar um preço de plano; senão, libere em **Usuários**.

@@ -1,6 +1,6 @@
 # Detox Body Max — Documento Técnico (lógica do programa)
 
-Data: 08/10/2026. Estado: produção em `https://detox7dias.vercel.app`.
+Data: 08/10/2026. Atualizado em 09/10/2026. Estado: produção em `https://detox7dias.vercel.app`.
 
 ## 1. Visão geral
 
@@ -11,7 +11,7 @@ Data: 08/10/2026. Estado: produção em `https://detox7dias.vercel.app`.
 | Pagamento | Stripe Checkout + Webhook (modo LIVE) |
 | IA do IMC (preparada, não ativa no app) | JEV (`https://www.jevai.org`, decisão/guardrail) + endpoint `/api/jev-test` |
 | Vídeos | YouTube (embed), Vimeo (embed), Gumlet/MP4/HLS (player próprio `hls.js`) |
-| Deploy | Vercel (projeto `detox7dias`), código no GitHub `amigosdasaudent-a11y/detox7dias`, branch `main` |
+| Deploy | Vercel (projeto `detox7dias`), código no GitHub `amigosdasaudent-a11y/detox7dias` (repo **público**), branch `main` |
 | E-mail transacional | SMTP próprio do Supabase (convite, recuperação de senha). Sem Resend. |
 
 Repositório local: `F:\Projeto detox\detox-app` (branch `master` → push para `a11y/main`).
@@ -34,7 +34,7 @@ Repositório local: `F:\Projeto detox\detox-app` (branch `master` → push para 
 | `/login` | Só e-mail + senha. Sem cadastro público, sem link mágico. Link para `/recuperar-senha` |
 | `/recuperar-senha` | Envia e-mail de redefinição (volta para `/definir-senha`) |
 | `/definir-senha` | Troca `?code=` por sessão (`exchangeCodeForSession`) e define a senha. Serve convite e recuperação |
-| `/sucesso?session_id=...` | Pós-pagamento: orienta a abrir o e-mail de convite |
+| `/sucesso?session_id=...` | Pós-pagamento: **cria a senha na hora** (sessão verificada como paga via `POST /api/sucesso/setup`) e entra direto; sem `session_id`, mensagem genérica |
 | `/blog` | Lista pública de artigos publicados |
 | `/blog/[slug]` | Artigo em Markdown |
 
@@ -64,17 +64,20 @@ Regra de acesso: `/inicio`, `/produto/*`, `/assistir/*` exigem `entitlements` co
 | `/admin/blog` | Novo artigo (título, Markdown, capa, publicado), editar, publicar/despublicar, excluir |
 | `/admin/loja` | CRUD da loja: foto, nome, descrição, botão 💬 WhatsApp (`wa.me` com mensagem) ou 🔗 externo, preço em texto, "libera o app?" (não/essencial/completo/vitalício), mostrar/ocultar, editar, excluir |
 | `/admin/usuarios` | Busca por e-mail, **liberar acesso manual** (plano; conta nova recebe convite), revogar/reativar |
+| `/admin/pagamentos` | Alternador 🧪 Teste / 💳 Live + secrets/webhooks/preços por modo (mascarados) + **links manuais da página de vendas por plano** + testar conexão |
 
 Uploads: navegador → Supabase direto via URL assinada (`POST /api/admin/upload-url` + `PUT`), sem limite de 4,5 MB da Vercel (`lib/admin-upload.ts`). Arquivos antigos iam pelo servidor (`/api/admin/upload`, mantida).
 
 ## 4. Fluxo de compra (Stripe)
 
 ```
-vendas.html --POST /api/checkout {plan}--> sessão Checkout (mode auto: subscription se preço recorrente)
-  --> cliente paga --> Stripe POST /api/stripe/webhook (assinatura whsec verificada)
+vendas.html --POST /api/checkout {plan}--> sessão Checkout (mode auto: subscription se preço recorrente;
+  link manual por plano em settings.sales_link_* pula direto para a URL)
+  --> cliente paga --> Stripe POST /api/stripe/webhook (assinatura whsec do modo ativo verificada)
     --> idempotência (stripe_events) --> cria usuário (e-mail do checkout)
-    --> grava entitlements(active) --> inviteUserByEmail (define senha)
-  --> /sucesso --> /login (senha) --> /quiz (1º acesso) --> /inicio
+    --> grava entitlements(active) --> inviteUserByEmail (backup; pode não chegar)
+  --> /sucesso?session_id=... --POST /api/sucesso/setup--> verifica sessão PAGA, define senha, garante acesso, auto-login
+  --> /quiz (1º acesso) --> /inicio
 ```
 
 - **Só preço de plano libera acesso** (`lib/stripe.ts::planFromPriceId`; preço desconhecido = evento registrado e ignorado).
@@ -88,17 +91,19 @@ vendas.html --POST /api/checkout {plan}--> sessão Checkout (mode auto: subscrip
 
 ## 6. Banco (Supabase)
 
-Tabelas: `profiles` (1 por `auth.users`, trigger `handle_new_user`), `entitlements`, `stripe_events`, `banners`, `collections` (produtos; migration `002`), `contents` (+`collection_id`; migration `002`), `quiz_questions`, `quiz_options`, `quiz_answers`, `favorites`, `progress`, `posts`, `products` (+`kind`,`target_url`,`grants_plan`; migration `003`), `imc_history`.
-Schema base: `supabase/schema.sql`; migrations: `supabase/migrations/002_collections.sql`, `003_store.sql` (aplicar via `node scripts/apply-sql.mjs <arq>` com `DATABASE_URL` do pooler).
+Tabelas: `profiles` (1 por `auth.users`, trigger `handle_new_user`), `entitlements`, `stripe_events`, `banners`, `collections` (produtos; migration `002`), `contents` (+`collection_id`; migration `002`), `quiz_questions`, `quiz_options`, `quiz_answers`, `favorites`, `progress`, `posts`, `products` (+`kind`,`target_url`,`grants_plan`; migration `003`), `imc_history`, `settings` (chaves Stripe teste/live + links de vendas; migration `004`, RLS sem policies = só servidor).
+Schema base: `supabase/schema.sql`; migrations `002`, `003`, `004` (aplicar via `node scripts/apply-sql.mjs <arq>` com `DATABASE_URL` do pooler).
 Segurança: RLS ativo; leitura pública só de publicados; escrita de conteúdo só admin; buckets `covers` e `content-files` **privados** (entrega por URL assinada); `service_role` e segredos só no servidor. Recomendado: desligar cadastro público (Auth → Sign In/Up).
 
 ## 7. Scripts (`scripts/`, todos leem `.env.local`, nada hardcoded)
 
-`apply-schema.mjs` (schema inicial), `apply-sql.mjs <arq>` (migration), `check-stripe.mjs` (lista preços, só leitura), `make-price.mjs` (cria preço), `make-webhook.mjs <url>` (cria endpoint + mostra `whsec`), `test-webhook.mjs [email]` (POST assinado local no webhook).
+`apply-schema.mjs` (schema inicial), `apply-sql.mjs <arq>` (migration), `check-stripe.mjs` (lista preços, só leitura), `make-price.mjs` (cria preço), `make-webhook.mjs <url>` (cria endpoint + mostra `whsec`), `test-webhook.mjs [email]` (POST assinado local no webhook), `setup-test-mode.mjs` (monta teste: produtos+preços+webhook e salva em settings), `fix-test-webhook.mjs` (gira o `whsec` de teste e corrige as 5 chaves).
 
 ## 8. Pendências conhecidas
 
 - Telas do menu ainda 404: `/imc` (+IA JEV Fase 5), `/salvos` (favoritos), `/progresso`, `/instalar`, `/pesquisar`, `/alterar-senha`.
+- Vídeos: prefira **MP4 ou YouTube**; Gumlet `.m3u8` com token dá tela preta (player agora mostra mensagem de erro em vez de travar).
+- Repo GitHub **público** (Hobby barra deploy automático de privado com autor externo).
 - `ADMIN_PASSWORD` e segredos: só em `.env.local` + Vercel + gerenciador de senhas. Nunca no git/chat.
 - Webhook produção registrado: `https://detox7dias.vercel.app/api/stripe/webhook` (Stripe Dashboard → Developers → Webhooks).
 - Supabase Auth → URL Configuration: Site `https://detox7dias.vercel.app`, redirects com `/inicio`.
