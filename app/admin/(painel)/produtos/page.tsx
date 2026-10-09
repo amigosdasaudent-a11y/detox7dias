@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import FileDrop from "@/components/FileDrop";
 import AdminPreviewImg from "@/components/AdminPreviewImg";
 
 type Collection = {
@@ -125,10 +126,12 @@ export default function ProdutosPage() {
           <h2 className="font-bold">{editing ? "Editar produto" : "Novo produto"}</h2>
           <input className="rounded-xl border px-4 py-2" placeholder="Nome do produto" required value={title} onChange={(e) => setTitle(e.target.value)} />
           <textarea className="rounded-xl border px-4 py-2" placeholder="Descrição (opcional)" value={description} onChange={(e) => setDescription(e.target.value)} />
-          <label className="text-sm">
-            Capa do produto (imagem)
-            <input type="file" accept="image/*" className="mt-1 block" onChange={(e) => setCover(e.target.files?.[0] || null)} />
-          </label>
+          <FileDrop
+            title="Capa do produto (imagem)"
+            accept="image/*"
+            hint="Aparece no card do produto"
+            onFile={setCover}
+          />
           <button disabled={loading} className="rounded-full bg-[#FF4D8D] py-2 font-semibold text-white disabled:opacity-50">
             {loading ? "Salvando..." : "Salvar produto"}
           </button>

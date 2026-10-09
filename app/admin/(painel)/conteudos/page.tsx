@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import FileDrop from "@/components/FileDrop";
 import AdminPreviewImg from "@/components/AdminPreviewImg";
 
 type Content = {
@@ -208,17 +209,20 @@ export default function ConteudosPage() {
               ))}
             </select>
           </label>
-          <label className="text-sm">
-            {type === "ebook" ? "Arquivo PDF" : type === "audio" ? "Arquivo MP3" : "Arquivo MP4 (ou deixe vazio e use URL abaixo)"}
-            <input type="file" className="mt-1 block" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-          </label>
+        <FileDrop
+          title={type === "ebook" ? "Arquivo PDF" : type === "audio" ? "Arquivo MP3" : "Arquivo MP4 (ou deixe vazio e use URL abaixo)"}
+          hint="Sobe para o armazenamento privado"
+          onFile={setFile}
+        />
           {type === "video" && (
             <input className="rounded-xl border px-4 py-2" placeholder="URL do vídeo: YouTube, Vimeo ou Gumlet (.m3u8)" value={url} onChange={(e) => setUrl(e.target.value)} />
           )}
-          <label className="text-sm">
-            Capa (imagem, opcional)
-            <input type="file" accept="image/*" className="mt-1 block" onChange={(e) => setCover(e.target.files?.[0] || null)} />
-          </label>
+        <FileDrop
+          title="Capa (imagem, opcional)"
+          accept="image/*"
+          hint="Aparece no card do app"
+          onFile={setCover}
+        />
           <button disabled={loading} className="rounded-full bg-[#FF4D8D] py-2 font-semibold text-white disabled:opacity-50">
             {loading ? "Enviando..." : "Salvar conteúdo"}
           </button>

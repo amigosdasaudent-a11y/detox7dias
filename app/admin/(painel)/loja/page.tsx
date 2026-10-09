@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import FileDrop from "@/components/FileDrop";
 import AdminPreviewImg from "@/components/AdminPreviewImg";
 
 type Product = {
@@ -176,10 +177,12 @@ export default function LojaAdminPage() {
               </select>
             </label>
           </div>
-          <label className="text-sm">
-            Foto do produto
-            <input type="file" accept="image/*" className="mt-1 block" onChange={(e) => setImage(e.target.files?.[0] || null)} />
-          </label>
+          <FileDrop
+            title="Foto do produto"
+            accept="image/*"
+            hint="Aparece no card da loja"
+            onFile={setImage}
+          />
           <button disabled={loading} className="rounded-full bg-[#FF4D8D] py-2 font-semibold text-white disabled:opacity-50">
             {loading ? "Salvando..." : "Salvar produto"}
           </button>

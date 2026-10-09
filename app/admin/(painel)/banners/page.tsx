@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import FileDrop from "@/components/FileDrop";
 import AdminPreviewImg from "@/components/AdminPreviewImg";
 
 type Banner = {
@@ -90,10 +91,12 @@ export default function BannersPage() {
 
       {showForm && (
         <form onSubmit={add} className="mt-4 flex flex-col gap-3 rounded-2xl bg-white p-6 shadow">
-          <label className="text-sm font-semibold">
-            1. Imagem do banner (sobe para o armazenamento)
-            <input type="file" accept="image/*" className="mt-1 block font-normal" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-          </label>
+          <FileDrop
+            title="1. Imagem do banner (sobe para o armazenamento)"
+            accept="image/*"
+            hint="PNG ou JPG"
+            onFile={setFile}
+          />
           <label className="text-sm font-semibold">
             2. Para onde vai quando o cliente clica (opcional, pode deixar vazio)
             <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="https://..." value={link} onChange={(e) => setLink(e.target.value)} />

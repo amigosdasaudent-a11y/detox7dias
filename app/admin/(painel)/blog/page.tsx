@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import FileDrop from "@/components/FileDrop";
 
 type Post = {
   id: string;
@@ -113,10 +114,12 @@ export default function BlogAdminPage() {
         <h2 className="font-bold">{editingId ? "Editar artigo" : "+ Novo artigo"}</h2>
         <input className="rounded-xl border px-4 py-2" placeholder="Título" required value={title} onChange={(e) => setTitle(e.target.value)} />
         <textarea className="min-h-40 rounded-xl border px-4 py-2 font-mono text-sm" placeholder="Texto em Markdown..." value={body} onChange={(e) => setBody(e.target.value)} />
-        <label className="text-sm">
-          Capa (imagem, opcional)
-          <input type="file" accept="image/*" className="mt-1 block" onChange={(e) => setCover(e.target.files?.[0] || null)} />
-        </label>
+        <FileDrop
+          title="Capa (imagem, opcional)"
+          accept="image/*"
+          hint="Aparece no card do artigo"
+          onFile={setCover}
+        />
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
           Publicado

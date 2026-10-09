@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import FileDrop from "@/components/FileDrop";
 
 type Sub = { id: string; name: string; phone: string; created_at: string };
 
@@ -96,10 +97,12 @@ export default function NovidadesPage() {
           onChange={(e) => setText(e.target.value)}
         />
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">
-            Imagem (opcional, vai com a legenda)
-            <input type="file" accept="image/*" className="mt-1 block" onChange={(e) => setImage(e.target.files?.[0] || null)} />
-          </label>
+          <FileDrop
+            title="Imagem (opcional, vai com a legenda)"
+            accept="image/*"
+            hint="Enviada junto no WhatsApp"
+            onFile={setImage}
+          />
           <label className="text-sm">
             Título do vídeo (opcional)
             <input className="mt-1 w-full rounded-xl border px-4 py-2" placeholder="Vídeo novo no app" value={videoTitle} onChange={(e) => setVideoTitle(e.target.value)} />
