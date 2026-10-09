@@ -68,7 +68,7 @@ export default function NovidadesPage() {
           (prev) =>
             prev +
             " Motivos: " +
-            json.failures.map((f) => `${f.phone}: ${f.error}`.slice(0, 120)).join(" | ")
+            json.failures.map((f: { phone: string; error: string }) => `${f.phone}: ${f.error}`.slice(0, 120)).join(" | ")
         );
       }
       setText("");
