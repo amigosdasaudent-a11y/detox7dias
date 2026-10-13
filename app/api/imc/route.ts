@@ -65,7 +65,12 @@ export async function POST(req: Request) {
     .eq("user_id", user.id)
     .gte("created_at", `${today}T00:00:00`);
   if ((count || 0) >= 5) {
-    return NextResponse.json({ error: "limite diário atingido (5/dia). Volte amanhã." }, { status: 429 });
+    const imcD = Math.round((w / Math.pow(h / 100, 2)) * 10) / 10;
+    await supabase.from("imc_history").insert({
+      user_id: user.id, weight_kg: w, height_cm: h, age,
+      imc: imcD, classification: classify(imcD), ai_plan: null, provider: "basico",
+    });
+    return NextResponse.json({ imc: imcD, classification: classify(imcD), plan: null, limited: "dia" });
   }
 
   const imc = Math.round((w / Math.pow(h / 100, 2)) * 10) / 10;
@@ -139,16 +144,19 @@ Regras: sem promessas de resultado ou prazo; sem jejum, laxantes, diuréticos ou
       const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
       const { data: recent } = await supabase
         .from("imc_history")
-        .select("id")
+        .select("id, created_at")
         .eq("user_id", user.id)
         .gte("created_at", weekAgo)
         .or("provider.eq.openai,provider.is.null")
         .limit(1);
       if (recent?.length) {
-        return NextResponse.json(
-          { error: "limite semanal da IA paga atingido (1/semana). Volte em alguns dias — o cálculo básico continua liberado." },
-          { status: 429 }
-        );
+        await supabase.from("imc_history").insert({
+          user_id: user.id, weight_kg: w, height_cm: h, age, sex, goal, restrictions,
+          imc, classification, ai_plan: null, provider: "basico",
+        });
+        const usedAt = new Date(recent[0].created_at).getTime();
+        const retryInDays = Math.max(1, Math.ceil((usedAt + 7 * 24 * 3600 * 1000 - Date.now()) / 86400000));
+        return NextResponse.json({ imc, classification, plan: null, limited: "semana", retryInDays });
       }
     }
     await supabase.from("imc_history").insert({

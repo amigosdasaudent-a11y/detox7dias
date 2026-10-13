@@ -25,7 +25,7 @@ export default function ImcPage() {
   const [restrCustom, setRestrCustom] = useState("");
   const goal = goalSel === "outro" ? goalCustom : goalSel;
   const restr = restrSel === "outra" ? restrCustom : restrSel === "Nenhuma" ? "" : restrSel;
-  const [result, setResult] = useState<{ imc: number; classification: string; plan: string } | null>(null);
+  const [result, setResult] = useState<{ imc: number; classification: string; plan: string | null; limited?: string; retryInDays?: number } | null>(null);
   const [hist, setHist] = useState<Hist[]>([]);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -59,9 +59,12 @@ export default function ImcPage() {
     });
     const json = await res.json();
     setLoading(false);
-    if (!res.ok) return setMsg(json.error || "falha. Tente de novo.");
-    setResult(json);
-    loadHist();
+    if (json.imc) {
+      setResult(json);
+      loadHist();
+      return;
+    }
+    setMsg(json.error || "falha. Tente de novo.");
   }
 
   const pos = result ? Math.max(0, Math.min(100, ((result.imc - 15) / 25) * 100)) : 0;
@@ -133,6 +136,14 @@ export default function ImcPage() {
           <div className="mt-3 h-3.5 rounded-full" style={{ background: "linear-gradient(90deg,#60A5FA 0 18%,#10B981 18% 45%,#FBBF24 45% 65%,#F87171 65%)" }}>
             <div className="h-6 w-1.5 rounded bg-neutral-800" style={{ marginLeft: `calc(${pos}% - 3px)`, marginTop: -5 }} />
           </div>
+          {result.limited && (
+            <p className="mt-3 rounded-xl bg-amber-50 p-3 text-center text-sm font-semibold text-amber-700">
+              {result.limited === "semana"
+                ? `Plano com IA esgotado esta semana${result.retryInDays ? ` — volta em ~${result.retryInDays} dia(s)` : ""}. Seu cálculo acima continua valendo.`
+                : "Limite de hoje atingido — seu cálculo acima continua valendo. Volte amanhã para o plano com IA."}
+            </p>
+          )}
+          {result.plan && (
           <div className="mt-4 text-sm text-neutral-800">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
@@ -152,6 +163,7 @@ export default function ImcPage() {
               {result.plan}
             </ReactMarkdown>
           </div>
+          )}
         </div>
       )}
 
