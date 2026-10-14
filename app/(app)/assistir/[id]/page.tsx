@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { maxPlan, planAllowed } from "@/lib/plan";
 import VideoPlayer from "@/components/VideoPlayer";
+import PdfReader from "@/components/PdfReader";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,7 @@ export default async function AssistirPage({
   if (!src) notFound();
 
   const isAudio = content.type === "audio";
+  const isEbook = content.type === "ebook";
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:px-8">
@@ -54,7 +56,9 @@ export default async function AssistirPage({
         <p className="mt-1 text-sm text-neutral-500">{content.description}</p>
       )}
       <div className="mt-4">
-        {isAudio ? (
+        {isEbook ? (
+          <PdfReader url={src} title={content.title} />
+        ) : isAudio ? (
           <audio className="w-full" controls src={src} />
         ) : (
           <VideoPlayer src={src} title={content.title} />

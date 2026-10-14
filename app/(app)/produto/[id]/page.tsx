@@ -71,14 +71,9 @@ export default async function ProdutoPage({
   }
   const cover = await sign("covers", product.cover_path);
   const covers = new Map<string, string>();
-  const files = new Map<string, string>();
   for (const c of contents || []) {
     const cov = await sign("covers", c.cover_path);
     if (cov) covers.set(c.id, cov);
-    if (c.type === "ebook" && c.file_path) {
-      const f = await sign("content-files", c.file_path);
-      if (f) files.set(c.id, f);
-    }
   }
 
   const ebooks = (contents || []).filter((c) => c.type === "ebook");
@@ -105,9 +100,9 @@ export default async function ProdutoPage({
         </div>
       </div>
 
-      <AulaSection title="📖 E-books" items={ebooks} covers={covers} files={files} action="Ler" />
-      <AulaSection title="🎧 Áudios" items={audios} covers={covers} files={files} action="Ouvir" />
-      <AulaSection title="▶️ Vídeos" items={videos} covers={covers} files={files} action="Assistir" />
+      <AulaSection title="📖 E-books" items={ebooks} covers={covers} action="Ler" />
+      <AulaSection title="🎧 Áudios" items={audios} covers={covers} action="Ouvir" />
+      <AulaSection title="▶️ Vídeos" items={videos} covers={covers} action="Assistir" />
 
       {ebooks.length + audios.length + videos.length === 0 && (
         <p className="mt-6 text-sm text-neutral-500">Nenhuma aula publicada neste produto ainda.</p>
@@ -120,13 +115,11 @@ function AulaSection({
   title,
   items,
   covers,
-  files,
   action,
 }: {
   title: string;
   items: { id: string; title: string; description: string | null }[];
   covers: Map<string, string>;
-  files: Map<string, string>;
   action: string;
 }) {
   if (items.length === 0) return null;
@@ -135,14 +128,12 @@ function AulaSection({
       <h2 className="text-lg font-bold">{title}</h2>
       <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {items.map((c) => {
-          const href = files.get(c.id) || `/assistir/${c.id}`;
-          const external = href.startsWith("http");
+          const href = `/assistir/${c.id}`;
           const cover = covers.get(c.id);
           return (
             <a
               key={c.id}
               href={href}
-              {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
               className="overflow-hidden rounded-2xl bg-white shadow hover:shadow-md"
             >
               {cover ? (

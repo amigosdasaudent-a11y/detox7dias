@@ -219,13 +219,15 @@ export default function ConteudosPage() {
               ))}
             </select>
           </label>
-        <FileDrop
-          title={type === "ebook" ? "Arquivo PDF" : type === "audio" ? "Arquivo MP3" : "Arquivo MP4 (ou deixe vazio e use URL abaixo)"}
-          hint="Sobe para o armazenamento privado"
-          onFile={setFile}
-        />
-          {type === "video" && (
-            <input className="rounded-xl border px-4 py-2" placeholder="URL do vídeo: YouTube, Vimeo ou Gumlet (.m3u8)" value={url} onChange={(e) => setUrl(e.target.value)} />
+        {type !== "audio" && (
+          <FileDrop
+            title={type === "ebook" ? "Arquivo PDF" : "Arquivo MP4 (ou deixe vazio e use URL abaixo)"}
+            hint="Sobe para o armazenamento privado"
+            onFile={setFile}
+          />
+        )}
+          {(type === "video" || type === "audio") && (
+            <input className="rounded-xl border px-4 py-2" placeholder={type === "video" ? "URL do vídeo: YouTube, Vimeo ou Gumlet (.m3u8)" : "URL do áudio (ex: https://audio.jukehost.co.uk/...) — sem usar nosso espaço"} value={url} onChange={(e) => setUrl(e.target.value)} />
           )}
         <FileDrop
           title="Capa (imagem, opcional)"
@@ -269,7 +271,7 @@ export default function ConteudosPage() {
             </label>
             {eType === "video" && (
               <label className="text-sm font-semibold">
-                URL do vídeo (YouTube, Vimeo ou Gumlet — só para vídeos por link)
+                URL externa (vídeo: YouTube/Vimeo/Gumlet · áudio: link MP3 ex. jukehost)
                 <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="https://..." value={eUrl} onChange={(e) => setEUrl(e.target.value)} />
               </label>
             )}
