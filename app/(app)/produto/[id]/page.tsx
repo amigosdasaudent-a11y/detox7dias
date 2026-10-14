@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { maxPlan, planAllowed } from "@/lib/plan";
 import VideoPlayer from "@/components/VideoPlayer";
 
 export const dynamic = "force-dynamic";
@@ -16,14 +17,13 @@ export default async function ProdutoPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: ent } = await supabase
+  const { data: ents } = await supabase
     .from("entitlements")
-    .select("id")
+    .select("plan")
     .eq("user_id", user.id)
-    .eq("status", "active")
-    .limit(1)
-    .single();
-  if (!ent) redirect("/inicio");
+    .eq("status", "active");
+  if (!ents?.length) redirect("/inicio");
+  const userPlan = maxPlan(ents.map((e) => e.plan));
 
   const { data: product } = await supabase
     .from("collections")
@@ -32,13 +32,36 @@ export default async function ProdutoPage({
     .eq("published", true)
     .single();
   if (!product) notFound();
+  if (!planAllowed(product.min_plan, userPlan)) {
+    return (
+      <div className="mx-auto w-full max-w-xl flex-1 px-4 py-16 text-center md:px-8">
+        <div className="rounded-3xl bg-white p-8 shadow">
+          <h1 className="text-xl font-extrabold">🔒 {product.title}</h1>
+          <p className="mt-2 text-sm text-neutral-500">
+            Este produto está incluído no plano <b>{product.min_plan}</b> (ou maior).
+            Seu plano atual: <b>{userPlan}</b>.
+          </p>
+          <a
+            href="/vendas.html#planos"
+            className="mt-6 inline-block rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white"
+          >
+            Fazer upgrade
+          </a>
+          <p className="mt-3">
+            <a href="/inicio" className="text-sm text-neutral-500">← Voltar</a>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  const { data: contents } = await supabase
+  const { data: allContents } = await supabase
     .from("contents")
-    .select("id, type, title, description, cover_path, file_path, external_url")
+    .select("id, type, title, description, cover_path, file_path, external_url, min_plan")
     .eq("collection_id", id)
     .eq("published", true)
     .order("sort_order");
+  const contents = (allContents || []).filter((c) => planAllowed(c.min_plan, userPlan));
 
   const svc = createServiceClient();
   async function sign(bucket: string, path: string | null): Promise<string | null> {

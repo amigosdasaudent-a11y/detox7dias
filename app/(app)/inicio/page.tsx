@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import BannerCarousel from "@/components/BannerCarousel";
 import NovidadesCard from "@/components/NovidadesCard";
+import { maxPlan, planAllowed } from "@/lib/plan";
 
 export const dynamic = "force-dynamic";
 
@@ -19,16 +20,13 @@ export default async function InicioPage() {
     .eq("id", user.id)
     .single();
 
-  const { data: entitlement } = await supabase
+  const { data: ents } = await supabase
     .from("entitlements")
     .select("plan")
     .eq("user_id", user.id)
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+    .eq("status", "active");
 
-  if (!entitlement) {
+  if (!ents?.length) {
     return (
       <div className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow">
@@ -48,6 +46,8 @@ export default async function InicioPage() {
     );
   }
 
+  const userPlan = maxPlan((ents || []).map((e) => e.plan));
+
   if (!profile?.quiz_completed) {
     redirect("/quiz");
   }
@@ -58,19 +58,21 @@ export default async function InicioPage() {
     .eq("active", true)
     .order("sort_order");
 
-  const { data: products } = await supabase
+  const { data: allProducts } = await supabase
     .from("collections")
-    .select("id, title, description, cover_path")
+    .select("id, title, description, cover_path, min_plan")
     .eq("published", true)
     .order("sort_order");
+  const products = (allProducts || []).filter((p) => planAllowed(p.min_plan, userPlan));
 
-  const { data: loose } = await supabase
+  const { data: allLoose } = await supabase
     .from("contents")
-    .select("id, type, title")
+    .select("id, type, title, min_plan")
     .is("collection_id", null)
     .eq("published", true)
     .order("sort_order")
     .limit(8);
+  const loose = (allLoose || []).filter((c) => planAllowed(c.min_plan, userPlan));
 
   const svc = createServiceClient();
   async function sign(bucket: string, path: string | null): Promise<string | null> {
@@ -96,7 +98,7 @@ export default async function InicioPage() {
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:px-8">
       <p className="text-sm text-neutral-500">
-        Olá{profile?.full_name ? `, ${profile.full_name}` : ""} • Plano {entitlement.plan}
+        Olá{profile?.full_name ? `, ${profile.full_name}` : ""} • Plano {userPlan}
       </p>
 
       {bannerImgs.length > 0 && (

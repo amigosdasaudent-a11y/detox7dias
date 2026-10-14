@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { maxPlan, planAllowed } from "@/lib/plan";
 import VideoPlayer from "@/components/VideoPlayer";
 
 export const dynamic = "force-dynamic";
@@ -16,14 +17,13 @@ export default async function AssistirPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: ent } = await supabase
+  const { data: ents } = await supabase
     .from("entitlements")
-    .select("id")
+    .select("plan")
     .eq("user_id", user.id)
-    .eq("status", "active")
-    .limit(1)
-    .single();
-  if (!ent) redirect("/inicio");
+    .eq("status", "active");
+  if (!ents?.length) redirect("/inicio");
+  const userPlan = maxPlan(ents.map((e) => e.plan));
 
   const { data: content } = await supabase
     .from("contents")
@@ -32,6 +32,7 @@ export default async function AssistirPage({
     .eq("published", true)
     .single();
   if (!content) notFound();
+  if (!planAllowed(content.min_plan, userPlan)) redirect("/inicio");
 
   let src = content.external_url as string | null;
   if (!src && content.file_path) {

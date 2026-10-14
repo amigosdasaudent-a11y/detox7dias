@@ -51,6 +51,7 @@ export default function ConteudosPage() {
   const [eCategory, setECategory] = useState("");
   const [ePlan, setEPlan] = useState("essencial");
   const [eCollection, setECollection] = useState("");
+  const [eFile, setEFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -114,25 +115,34 @@ export default function ConteudosPage() {
     e.preventDefault();
     if (!editing) return;
     setLoading(true);
-    const res = await fetch("/api/admin/contents", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: editing.id,
-        type: eType,
-        title: eTitle,
-        description: eDesc || null,
-        external_url: eUrl || null,
-        category: eCategory || null,
-        min_plan: ePlan,
-        collection_id: eCollection || null,
-      }),
-    });
-    setLoading(false);
-    if (!res.ok) return setMsg("Falha ao salvar.");
-    setEditing(null);
     setMsg("");
-    load();
+    try {
+      let file_path: string | undefined;
+      if (eFile) file_path = await upload(eFile, "content-files");
+      const res = await fetch("/api/admin/contents", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editing.id,
+          type: eType,
+          title: eTitle,
+          description: eDesc || null,
+          external_url: eType === "video" ? eUrl || null : null,
+          ...(file_path ? { file_path } : {}),
+          category: eCategory || null,
+          min_plan: ePlan,
+          collection_id: eCollection || null,
+        }),
+      });
+      if (!res.ok) throw new Error("Falha ao salvar.");
+      setEditing(null);
+      setEFile(null);
+      setMsg("");
+      load();
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "erro");
+    }
+    setLoading(false);
   }
 
   async function toggle(c: Content) {
@@ -257,10 +267,17 @@ export default function ConteudosPage() {
               Descrição
               <textarea className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="Descrição" value={eDesc} onChange={(e) => setEDesc(e.target.value)} />
             </label>
-            <label className="text-sm font-semibold">
-              URL do vídeo (YouTube, Vimeo ou Gumlet — só para vídeos por link)
-              <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="https://..." value={eUrl} onChange={(e) => setEUrl(e.target.value)} />
-            </label>
+            {eType === "video" && (
+              <label className="text-sm font-semibold">
+                URL do vídeo (YouTube, Vimeo ou Gumlet — só para vídeos por link)
+                <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="https://..." value={eUrl} onChange={(e) => setEUrl(e.target.value)} />
+              </label>
+            )}
+            <FileDrop
+              title="Trocar arquivo (PDF/MP3/MP4 — vazio mantém o atual)"
+              hint={editing?.file_path ? `Atual: ${editing.file_path}` : "Sem arquivo hoje"}
+              onFile={setEFile}
+            />
             <div className="flex gap-2">
               <label className="w-full text-sm font-semibold">
                 Categoria

@@ -26,6 +26,7 @@ export default function ProdutosPage() {
   const [editing, setEditing] = useState<Collection | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [plan, setPlan] = useState("essencial");
   const [cover, setCover] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,6 +45,7 @@ export default function ProdutosPage() {
     setEditing(c);
     setTitle(c.title);
     setDescription(c.description || "");
+    setPlan(c.min_plan || "essencial");
     setCover(null);
     setShowForm(true);
     window.scrollTo({ top: 0 });
@@ -53,6 +55,7 @@ export default function ProdutosPage() {
     setEditing(null);
     setTitle("");
     setDescription("");
+    setPlan("essencial");
     setCover(null);
     setShowForm(false);
   }
@@ -64,7 +67,7 @@ export default function ProdutosPage() {
     try {
       let cover_path: string | null = null;
       if (cover) cover_path = await upload(cover);
-      const payload: Record<string, unknown> = { title, description: description || null };
+      const payload: Record<string, unknown> = { title, description: description || null, min_plan: plan };
       if (cover_path) payload.cover_path = cover_path;
       let res: Response;
       if (editing) {
@@ -126,6 +129,14 @@ export default function ProdutosPage() {
           <h2 className="font-bold">{editing ? "Editar produto" : "Novo produto"}</h2>
           <input className="rounded-xl border px-4 py-2" placeholder="Nome do produto" required value={title} onChange={(e) => setTitle(e.target.value)} />
           <textarea className="rounded-xl border px-4 py-2" placeholder="Descrição (opcional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <label className="text-sm font-semibold">
+            Plano mínimo (quem tem esse plano ou maior enxerga)
+            <select className="mt-1 block w-full rounded-xl border px-4 py-2 font-normal" value={plan} onChange={(e) => setPlan(e.target.value)}>
+              <option value="essencial">Essencial (todos veem)</option>
+              <option value="completo">Completo</option>
+              <option value="vitalicio">Vitalício</option>
+            </select>
+          </label>
           <FileDrop
             title="Capa do produto (imagem)"
             accept="image/*"
@@ -152,7 +163,7 @@ export default function ProdutosPage() {
             </div>
             <div className="p-4">
               <p className="font-bold">{c.title}</p>
-              <p className="text-sm text-neutral-500">{c.contents?.[0]?.count ?? 0} aulas</p>
+              <p className="text-sm text-neutral-500">{c.contents?.[0]?.count ?? 0} aulas • plano {c.min_plan || "essencial"}+</p>
               <div className="mt-3 flex gap-4 text-sm">
                 <button onClick={() => toggle(c)} className="font-semibold text-[#FF4D8D]">
                   {c.published ? "Ocultar produto" : "Mostrar produto"}
