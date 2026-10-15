@@ -152,7 +152,7 @@ export default function PdfReader({ url, title }: { url: string; title: string }
             onLoadSuccess={({ numPages }) => setPages(numPages)}
             onLoadError={(err) => {
               setFailed(true);
-              setFailMsg(err instanceof Error ? err.message : String(err?.message || err || ""));
+              setFailMsg(err instanceof Error ? err.message : "erro desconhecido");
             }}
             loading={<p className="p-8 text-center text-sm">Abrindo... 📖</p>}
           >
