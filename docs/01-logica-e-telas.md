@@ -37,13 +37,14 @@ Repositório local: `F:\Projeto detox\detox-app` (branch `master` → push para 
 | `/sucesso?session_id=...` | Pós-pagamento: **cria a senha na hora** (sessão verificada como paga via `POST /api/sucesso/setup`) e entra direto; sem `session_id`, mensagem genérica |
 | `/blog` | Lista pública de artigos publicados |
 | `/blog/[slug]` | Artigo em Markdown |
+| `/ver/[id]` | **Página pública de amostra**: aula com `is_free` abre tudo (PDF/áudio/vídeo) sem login; aula paga mostra teaser 🔒 + CTA |
 
 ### 3.2 Área do cliente (exige login; layout com sidebar escura)
 Sidebar: Início, Loja, Blog, IMC, Módulos salvos, Meu progresso, Instalar App, Pesquisar, Alterar senha, Sair. Menu mobile vira gaveta ☰.
 
 | Rota | Estado |
 |---|---|
-| `/inicio` | ✅ Banner rotativo (setas + dots) + grade **Meus produtos** (capa → abre) + Avulsos + card IMC |
+| `/inicio` | ✅ Banner rotativo (setas + dots) + card 🔔 Novidades + grade **Meus produtos** (capa → abre) + seções de **avulsos por categoria** (fallback "Avulsos") + card IMC |
 | `/produto/[id]` | ✅ Capa do produto + aulas separadas (E-books, Áudios, Vídeos) |
 | `/assistir/[id]` | ✅ Player universal (YouTube/Vimeo/MP4/HLS) ou `<audio>`; arquivos via URL assinada 10 min |
 | `/quiz` | ✅ 5 perguntas ativas; salva em `quiz_answers` e marca `profiles.quiz_completed` |
@@ -65,6 +66,8 @@ Regra de acesso: `/inicio`, `/produto/*`, `/assistir/*` exigem `entitlements` co
 | `/admin/loja` | CRUD da loja: foto, nome, descrição, botão 💬 WhatsApp (`wa.me` com mensagem) ou 🔗 externo, preço em texto, "libera o app?" (não/essencial/completo/vitalício), mostrar/ocultar, editar, excluir |
 | `/admin/usuarios` | Busca por e-mail, **liberar acesso manual** (plano; conta nova recebe convite), revogar/reativar |
 | `/admin/pagamentos` | Alternador 🧪 Teste / 💳 Live + secrets/webhooks/preços por modo (mascarados) + **links manuais da página de vendas por plano** + testar conexão |
+| `/admin/integracoes` | Evolution (URL, instância, **token da instância**, status, QR, teste) + IA em cascata (Groq → Extra → OpenAI) |
+| `/admin/novidades` | Broadcast WhatsApp: seleção de contatos (todos/marcados), texto com `{nome}`, imagem com legenda, link de vídeo (YouTube/Vimeo/Gumlet), relatório com motivos |
 
 Uploads: navegador → Supabase direto via URL assinada (`POST /api/admin/upload-url` + `PUT`), sem limite de 4,5 MB da Vercel (`lib/admin-upload.ts`). Arquivos antigos iam pelo servidor (`/api/admin/upload`, mantida).
 
@@ -103,6 +106,8 @@ Segurança: RLS ativo; leitura pública só de publicados; escrita de conteúdo 
 
 - Telas do menu ainda 404: `/imc` (+IA JEV Fase 5), `/salvos` (favoritos), `/progresso`, `/instalar`, `/pesquisar`, `/alterar-senha`.
 - Vídeos: prefira **MP4 ou YouTube**; Gumlet `.m3u8` com token dá tela preta (player agora mostra mensagem de erro em vez de travar).
+- **Plano mínimo** (`lib/plan.ts`): essencial < completo < vitalicio; produto/aula de plano superior aparece com 🔒 e só abre com upgrade (telas `/produto/[id]` e `/ver/[id]`).
+- **Áudio por link externo** (jukehost etc.), sem upload; **PDF** no Storage com leitor próprio (`components/PdfReader.tsx`, zoom A-/A+, worker local, fallback "Tentar pelo Google").
 - Repo GitHub **público** (Hobby barra deploy automático de privado com autor externo).
 - `ADMIN_PASSWORD` e segredos: só em `.env.local` + Vercel + gerenciador de senhas. Nunca no git/chat.
 - Webhook produção registrado: `https://detox7dias.vercel.app/api/stripe/webhook` (Stripe Dashboard → Developers → Webhooks).
