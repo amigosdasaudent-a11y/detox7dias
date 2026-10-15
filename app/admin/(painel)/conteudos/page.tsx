@@ -53,6 +53,7 @@ export default function ConteudosPage() {
   const [ePlan, setEPlan] = useState("essencial");
   const [eCollection, setECollection] = useState("");
   const [eFile, setEFile] = useState<File | null>(null);
+  const [eCover, setECover] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -110,6 +111,8 @@ export default function ConteudosPage() {
     setECategory(c.category || "");
     setEPlan(c.min_plan || "essencial");
     setECollection(c.collection_id || "");
+    setEFile(null);
+    setECover(null);
   }
 
   async function saveEdit(e: React.FormEvent) {
@@ -120,6 +123,8 @@ export default function ConteudosPage() {
     try {
       let file_path: string | undefined;
       if (eFile) file_path = await upload(eFile, "content-files");
+      let cover_path: string | undefined;
+      if (eCover) cover_path = await upload(eCover, "covers");
       const res = await fetch("/api/admin/contents", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -130,6 +135,7 @@ export default function ConteudosPage() {
           description: eDesc || null,
           external_url: eType === "video" || eType === "audio" ? eUrl || null : null,
           ...(file_path ? { file_path } : {}),
+          ...(cover_path ? { cover_path } : {}),
           category: eCategory || null,
           min_plan: ePlan,
           collection_id: eCollection || null,
@@ -138,6 +144,7 @@ export default function ConteudosPage() {
       if (!res.ok) throw new Error("Falha ao salvar.");
       setEditing(null);
       setEFile(null);
+      setECover(null);
       setMsg("");
       load();
     } catch (err) {
@@ -301,6 +308,12 @@ export default function ConteudosPage() {
               onFile={setEFile}
             />
             )}
+            <FileDrop
+              title="Capa (imagem — vazio mantém a atual)"
+              accept="image/*"
+              hint={editing?.cover_path ? `Atual: ${editing.cover_path}` : "Sem capa hoje"}
+              onFile={setECover}
+            />
             <div className="flex gap-2">
               <label className="w-full text-sm font-semibold">
                 Categoria
