@@ -61,7 +61,7 @@ export default async function ProdutoPage({
     .eq("collection_id", id)
     .eq("published", true)
     .order("sort_order");
-  const contents = (allContents || []).filter((c) => planAllowed(c.min_plan, userPlan));
+  const contents = allContents || [];
 
   const svc = createServiceClient();
   async function sign(bucket: string, path: string | null): Promise<string | null> {
@@ -100,9 +100,9 @@ export default async function ProdutoPage({
         </div>
       </div>
 
-      <AulaSection title="📖 E-books" items={ebooks} covers={covers} action="Ler" />
-      <AulaSection title="🎧 Áudios" items={audios} covers={covers} action="Ouvir" />
-      <AulaSection title="▶️ Vídeos" items={videos} covers={covers} action="Assistir" />
+      <AulaSection title="📖 E-books" items={ebooks} covers={covers} action="Ler" userPlan={userPlan} />
+      <AulaSection title="🎧 Áudios" items={audios} covers={covers} action="Ouvir" userPlan={userPlan} />
+      <AulaSection title="▶️ Vídeos" items={videos} covers={covers} action="Assistir" userPlan={userPlan} />
 
       {ebooks.length + audios.length + videos.length === 0 && (
         <p className="mt-6 text-sm text-neutral-500">Nenhuma aula publicada neste produto ainda.</p>
@@ -116,11 +116,13 @@ function AulaSection({
   items,
   covers,
   action,
+  userPlan,
 }: {
   title: string;
-  items: { id: string; title: string; description: string | null }[];
+  items: { id: string; title: string; description: string | null; min_plan: string | null }[];
   covers: Map<string, string>;
   action: string;
+  userPlan: string;
 }) {
   if (items.length === 0) return null;
   return (
@@ -128,13 +130,14 @@ function AulaSection({
       <h2 className="text-lg font-bold">{title}</h2>
       <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {items.map((c) => {
-          const href = `/assistir/${c.id}`;
+          const locked = !planAllowed(c.min_plan, userPlan);
+          const href = locked ? `/ver/${c.id}` : `/assistir/${c.id}`;
           const cover = covers.get(c.id);
           return (
             <a
               key={c.id}
               href={href}
-              className="overflow-hidden rounded-2xl bg-white shadow hover:shadow-md"
+              className="relative block overflow-hidden rounded-2xl bg-white shadow hover:shadow-md"
             >
               {cover ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -144,7 +147,12 @@ function AulaSection({
                   {c.title[0]}
                 </div>
               )}
-              <div className="p-3">
+              {locked && (
+                <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-xs font-bold text-white">
+                  🔒 {c.min_plan}
+                </span>
+              )}
+              <div className="p-3 relative">
                 <p className="line-clamp-2 text-sm font-semibold">{c.title}</p>
                 <span className="mt-2 block h-1 w-10 rounded-full bg-[#FF4D8D]" />
                 <span className="mt-1 block text-xs font-semibold text-[#FF4D8D]">{action} →</span>

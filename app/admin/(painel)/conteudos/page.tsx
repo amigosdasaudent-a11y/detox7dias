@@ -16,6 +16,7 @@ type Content = {
   min_plan: string | null;
   collection_id: string | null;
   published: boolean;
+  is_free: boolean;
   sort_order: number;
 };
 
@@ -152,6 +153,22 @@ export default function ConteudosPage() {
       body: JSON.stringify({ id: c.id, published: !c.published }),
     });
     load();
+  }
+
+  async function toggleFree(c: Content) {
+    await fetch("/api/admin/contents", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: c.id, is_free: !c.is_free }),
+    });
+    load();
+  }
+
+  function copyLink(id: string) {
+    navigator.clipboard.writeText(`${window.location.origin}/ver/${id}`).then(
+      () => setMsg("Link copiado! Compartilhe no WhatsApp."),
+      () => setMsg("Não copiou. Copie manual: /ver/" + id)
+    );
   }
 
   async function remove(id: string) {
@@ -338,6 +355,11 @@ export default function ConteudosPage() {
                 <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${c.published ? "bg-emerald-100 text-emerald-700" : "bg-neutral-200 text-neutral-500"}`}>
                   {c.published ? "Visível" : "Oculto"}
                 </span>
+                {c.is_free && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+                    Grátis
+                  </span>
+                )}
                 <span className="rounded-full bg-[#FFF0F5] px-2 py-0.5 text-xs font-bold text-[#FF4D8D]">
                   {colName(c.collection_id)}
                 </span>
@@ -346,6 +368,10 @@ export default function ConteudosPage() {
             </div>
             <div className="flex shrink-0 gap-3 text-sm">
               <button onClick={() => toggle(c)} title={c.published ? "Ocultar" : "Mostrar"}>👁</button>
+              <button onClick={() => toggleFree(c)} title={c.is_free ? "Tirar do grátis" : "Liberar grátis"}>🎁</button>
+              {c.is_free && c.published && (
+                <button onClick={() => copyLink(c.id)} title="Copiar link público">🔗</button>
+              )}
               <button onClick={() => startEdit(c)} title="Editar">✏️</button>
               <button onClick={() => remove(c.id)} title="Excluir">🗑</button>
             </div>

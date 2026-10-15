@@ -299,3 +299,7 @@ create policy "sub_owner" on subscribers
 
 -- Provedor de IA do cálculo (migration 007; limite semanal da paga)
 alter table imc_history add column if not exists provider text;
+
+-- Aula gratuita pública (migration 008)
+alter table contents add column if not exists is_free boolean default false;
+create index if not exists contents_free_idx on contents(is_free) where published = true;

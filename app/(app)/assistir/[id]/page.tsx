@@ -33,7 +33,7 @@ export default async function AssistirPage({
     .eq("published", true)
     .single();
   if (!content) notFound();
-  if (!planAllowed(content.min_plan, userPlan)) redirect("/inicio");
+  if (!planAllowed(content.min_plan, userPlan)) redirect(`/ver/${id}`);
 
   let src = content.external_url as string | null;
   if (!src && content.file_path) {
