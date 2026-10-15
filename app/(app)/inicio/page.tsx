@@ -67,12 +67,18 @@ export default async function InicioPage() {
 
   const { data: allLoose } = await supabase
     .from("contents")
-    .select("id, type, title, min_plan")
+    .select("id, type, title, min_plan, category")
     .is("collection_id", null)
     .eq("published", true)
     .order("sort_order")
-    .limit(8);
+    .limit(24);
   const loose = (allLoose || []).filter((c) => planAllowed(c.min_plan, userPlan));
+  const looseGroups = new Map<string, typeof loose>();
+  for (const c of loose) {
+    const g = (c.category || "").trim() || "Avulsos";
+    if (!looseGroups.has(g)) looseGroups.set(g, []);
+    looseGroups.get(g)!.push(c);
+  }
 
   const svc = createServiceClient();
   async function sign(bucket: string, path: string | null): Promise<string | null> {
@@ -139,11 +145,11 @@ export default async function InicioPage() {
         })}
       </div>
 
-      {(loose || []).length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-lg font-bold">Avulsos</h2>
+      {[...looseGroups.entries()].map(([group, items]) => (
+        <div key={group} className="mt-8">
+          <h2 className="text-lg font-bold">{group}</h2>
           <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {loose!.map((c) => (
+            {items.map((c) => (
               <a key={c.id} href={`/assistir/${c.id}`} className="rounded-2xl bg-white p-4 shadow hover:shadow-md">
                 <p className="line-clamp-2 text-sm font-semibold">{c.title}</p>
                 <span className="mt-1 block text-xs font-semibold text-[#FF4D8D]">
@@ -153,7 +159,7 @@ export default async function InicioPage() {
             ))}
           </div>
         </div>
-      )}
+      ))}
 
       <div className="mt-8 rounded-3xl bg-white p-6 shadow">
         <h2 className="font-semibold">⚖️ Meu IMC</h2>
