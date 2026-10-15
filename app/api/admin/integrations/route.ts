@@ -18,6 +18,7 @@ const ALLOWED = new Set([
   "evo_url", "evo_key", "evo_instance", "openai_key",
   "ai_groq_key", "ai_groq_model",
   "ai_custom_key", "ai_custom_base", "ai_custom_model",
+  "vendas_video_url",
 ]);
 
 // GET -> credenciais mascaradas + estado da conexão
@@ -38,6 +39,7 @@ export async function GET() {
     custom: { set: !!map.get("ai_custom_key") },
     custom_base: map.get("ai_custom_base") || "",
     custom_model: map.get("ai_custom_model") || "",
+    vendas_video_url: map.get("vendas_video_url") || "",
   };
   try {
     const cfg = await getEvoConfig();
@@ -63,7 +65,8 @@ export async function PUT(req: Request) {
   for (const [k, v] of Object.entries(values || {})) {
     if (!ALLOWED.has(k)) continue;
     const clean = (v || "").trim().replace(/\/$/, "");
-    if (!clean) continue;
+    // vazio mantém o valor atual — exceto o vídeo, que pode ser limpo
+    if (!clean && k !== "vendas_video_url") continue;
     await supabase
       .from("settings")
       .upsert({ key: k, value: k === "evo_url" ? clean : v.trim(), updated_at: new Date().toISOString() });

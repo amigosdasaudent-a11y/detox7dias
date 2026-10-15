@@ -11,6 +11,7 @@ export default function IntegracoesPage() {
   const [groqModel, setGroqModel] = useState("openai/gpt-oss-120b");
   const [customSet, setCustomSet] = useState(false);
   const [customBase, setCustomBase] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [form, setForm] = useState<Record<string, string>>({});
   const [state, setState] = useState("...");
   const [evoErr, setEvoErr] = useState("");
@@ -32,6 +33,7 @@ export default function IntegracoesPage() {
     setGroqModel(json.groq_model || "openai/gpt-oss-120b");
     setCustomSet(!!json.custom?.set);
     setCustomBase(json.custom_base || "");
+    setVideoUrl(json.vendas_video_url || "");
     setState(json.evo_state || "desconectado");
     setEvoErr(json.evo_error || "");
     setForm({});
@@ -94,6 +96,42 @@ export default function IntegracoesPage() {
       <h1 className="text-2xl font-extrabold">Integrações</h1>
       <p className="text-sm text-neutral-500">WhatsApp (Evolution) e inteligência artificial.</p>
       {msg && <p className="mt-4 text-sm text-neutral-700">{msg}</p>}
+
+      <div className="mt-4 rounded-2xl bg-white p-6 shadow">
+        <h2 className="font-bold">🎬 Vídeo da página de vendas</h2>
+        <p className="mt-1 text-xs text-neutral-500">
+          Aparece logo abaixo da primeira dobra em <span className="font-mono">/vendas.html</span>. Cole o link de
+          incorporação (embed) do Gumlet — ex: <span className="font-mono">https://play.gumlet.io/embed/xxxx</span> — ou
+          um link direto de vídeo (.mp4 / .m3u8). Deixe vazio para não exibir.
+        </p>
+        <label className="mt-4 block text-sm font-semibold">
+          Link do vídeo
+          <input
+            className="mt-1 w-full rounded-xl border px-4 py-2 font-mono font-normal"
+            placeholder="https://play.gumlet.io/embed/..."
+            value={form.vendas_video_url ?? videoUrl}
+            onChange={(e) => set("vendas_video_url", e.target.value)}
+          />
+        </label>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            disabled={loading}
+            onClick={() => save({ vendas_video_url: form.vendas_video_url ?? videoUrl }, "Vídeo salvo!")}
+            className="rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white disabled:opacity-50"
+          >
+            Salvar vídeo
+          </button>
+          {videoUrl && (
+            <button
+              disabled={loading}
+              onClick={() => save({ vendas_video_url: "" }, "Vídeo removido!")}
+              className="rounded-full border px-6 py-2"
+            >
+              Remover
+            </button>
+          )}
+        </div>
+      </div>
 
       <div className="mt-4 rounded-2xl bg-white p-6 shadow">
         <div className="flex items-center justify-between">

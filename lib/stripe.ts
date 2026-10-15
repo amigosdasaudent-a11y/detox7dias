@@ -56,6 +56,33 @@ export function getStripe(secretKey: string): Stripe {
   return new Stripe(secretKey, { apiVersion: "2026-09-30.endive" });
 }
 
+// Fim do período atual da assinatura ativa do cliente (ISO) ou null.
+// Usado para avisar quantos dias faltam até a próxima cobrança.
+export async function getCustomerPeriodEnd(
+  customerId: string | null | undefined
+): Promise<string | null> {
+  if (!customerId) return null;
+  try {
+    const cfg = await getStripeConfig();
+    const stripe = getStripe(cfg.secretKey);
+    const subs = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "active",
+      limit: 1,
+    });
+    const sub = subs.data[0];
+    if (!sub) return null;
+    // Stripe v23: current_period_end fica no item da assinatura
+    const end =
+      (sub.items?.data?.[0] as { current_period_end?: number } | undefined)
+        ?.current_period_end ??
+      (sub as unknown as { current_period_end?: number }).current_period_end;
+    return end ? new Date(end * 1000).toISOString() : null;
+  } catch {
+    return null;
+  }
+}
+
 // Mapeia Price ID -> plano. null = preço desconhecido (ex: loja), NÃO libera acesso.
 export function planFromPriceId(
   priceId: string | null | undefined,

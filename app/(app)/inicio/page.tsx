@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import BannerCarousel from "@/components/BannerCarousel";
 import NovidadesCard from "@/components/NovidadesCard";
 import { maxPlan, planAllowed } from "@/lib/plan";
+import { getCustomerPeriodEnd } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export default async function InicioPage() {
 
   const { data: ents } = await supabase
     .from("entitlements")
-    .select("plan")
+    .select("plan, stripe_customer_id")
     .eq("user_id", user.id)
     .eq("status", "active");
 
@@ -47,6 +48,17 @@ export default async function InicioPage() {
   }
 
   const userPlan = maxPlan((ents || []).map((e) => e.plan));
+
+  // Aviso de renovação para quem está no plano mensal (essencial).
+  const monthly = (ents || []).find((e) => e.plan === "essencial");
+  const periodEnd = monthly ? await getCustomerPeriodEnd(monthly.stripe_customer_id) : null;
+  let renewDays: number | null = null;
+  let renewDate = "";
+  if (periodEnd) {
+    const end = new Date(periodEnd);
+    renewDays = Math.ceil((end.getTime() - Date.now()) / 86_400_000);
+    renewDate = end.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  }
 
   if (!profile?.quiz_completed) {
     redirect("/quiz");
@@ -106,6 +118,21 @@ export default async function InicioPage() {
       <p className="text-sm text-neutral-500">
         Olá{profile?.full_name ? `, ${profile.full_name}` : ""} • Plano {userPlan}
       </p>
+
+      {renewDays !== null && (
+        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span className="text-lg">⏳</span>
+          <span>
+            {renewDays > 0 ? (
+              <>
+                Sua assinatura mensal renova em <b>{renewDays} {renewDays === 1 ? "dia" : "dias"}</b> ({renewDate}).
+              </>
+            ) : (
+              <>Sua assinatura mensal está sendo renovada. Renovação prevista para {renewDate}.</>
+            )}
+          </span>
+        </div>
+      )}
 
       {bannerImgs.length > 0 && (
         <div className="mt-4">
