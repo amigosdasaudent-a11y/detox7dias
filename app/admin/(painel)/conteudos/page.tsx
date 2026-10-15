@@ -127,7 +127,7 @@ export default function ConteudosPage() {
           type: eType,
           title: eTitle,
           description: eDesc || null,
-          external_url: eType === "video" ? eUrl || null : null,
+          external_url: eType === "video" || eType === "audio" ? eUrl || null : null,
           ...(file_path ? { file_path } : {}),
           category: eCategory || null,
           min_plan: ePlan,
@@ -269,17 +269,21 @@ export default function ConteudosPage() {
               Descrição
               <textarea className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="Descrição" value={eDesc} onChange={(e) => setEDesc(e.target.value)} />
             </label>
-            {eType === "video" && (
+            {(eType === "video" || eType === "audio") && (
               <label className="text-sm font-semibold">
-                URL externa (vídeo: YouTube/Vimeo/Gumlet · áudio: link MP3 ex. jukehost)
+                {eType === "video"
+                  ? "URL do vídeo (YouTube, Vimeo ou Gumlet — só para vídeos por link)"
+                  : "URL do áudio (ex: https://audio.jukehost.co.uk/... — sem usar nosso espaço)"}
                 <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="https://..." value={eUrl} onChange={(e) => setEUrl(e.target.value)} />
               </label>
             )}
+            {eType !== "audio" && (
             <FileDrop
-              title="Trocar arquivo (PDF/MP3/MP4 — vazio mantém o atual)"
+              title="Trocar arquivo (PDF/MP4 — vazio mantém o atual)"
               hint={editing?.file_path ? `Atual: ${editing.file_path}` : "Sem arquivo hoje"}
               onFile={setEFile}
             />
+            )}
             <div className="flex gap-2">
               <label className="w-full text-sm font-semibold">
                 Categoria
