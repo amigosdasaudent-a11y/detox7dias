@@ -1,18 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 export default function PdfReader({ url, title }: { url: string; title: string }) {
   const [mode, setMode] = useState<"ask" | "read">("ask");
   const [pages, setPages] = useState(0);
   const [page, setPage] = useState(1);
-  const [scale, setScale] = useState(1);
+  const [zoom, setZoom] = useState(1);
   const [failed, setFailed] = useState(false);
+  const [boxWidth, setBoxWidth] = useState(350);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function measure() {
+      if (boxRef.current) {
+        setBoxWidth(Math.min(700, Math.max(280, boxRef.current.clientWidth - 16)));
+      }
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [mode]);
 
   if (mode === "ask") {
     return (
@@ -69,15 +82,15 @@ export default function PdfReader({ url, title }: { url: string; title: string }
         </div>
         <div className="flex items-center gap-1 rounded-full bg-white px-2 py-1 shadow">
           <button
-            onClick={() => setScale((s) => Math.max(0.6, +(s - 0.2).toFixed(1)))}
+            onClick={() => setZoom((s) => Math.max(0.6, +(s - 0.2).toFixed(1)))}
             className="px-2 font-bold"
             aria-label="Diminuir texto"
           >
             A-
           </button>
-          <span className="text-xs font-semibold">{Math.round(scale * 100)}%</span>
+          <span className="text-xs font-semibold">{Math.round(zoom * 100)}%</span>
           <button
-            onClick={() => setScale((s) => Math.min(2.5, +(s + 0.2).toFixed(1)))}
+            onClick={() => setZoom((s) => Math.min(2, +(s + 0.2).toFixed(1)))}
             className="px-2 font-bold"
             aria-label="Aumentar texto"
           >
@@ -105,7 +118,7 @@ export default function PdfReader({ url, title }: { url: string; title: string }
           </a>
         </div>
       ) : (
-        <div className="overflow-auto rounded-2xl bg-neutral-200 p-2 shadow">
+        <div ref={boxRef} className="overflow-auto rounded-2xl bg-neutral-200 p-2 shadow">
           <Document
             file={url}
             onLoadSuccess={({ numPages }) => setPages(numPages)}
@@ -114,7 +127,7 @@ export default function PdfReader({ url, title }: { url: string; title: string }
           >
             <Page
               pageNumber={page}
-              scale={scale}
+              width={Math.round(boxWidth * zoom)}
               onRenderError={() => setFailed(true)}
               loading=""
             />
