@@ -7,15 +7,68 @@ import "react-pdf/dist/Page/TextLayer.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
+// Renderiza a página só quando ela se aproxima da tela (rolagem contínua leve).
+function LazyPage({
+  pageNumber,
+  width,
+  onActive,
+  onError,
+}: {
+  pageNumber: number;
+  width: number;
+  onActive: (n: number) => void;
+  onError: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setShow(true);
+      },
+      { rootMargin: "800px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) onActive(pageNumber);
+      },
+      { rootMargin: "-45% 0px -45% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [pageNumber, onActive]);
+
+  return (
+    <div ref={ref} className="mb-3 flex justify-center">
+      {show ? (
+        <Page pageNumber={pageNumber} width={width} loading="" onRenderError={onError} />
+      ) : (
+        <div className="rounded bg-white/40" style={{ width, height: Math.round(width * 1.4) }} />
+      )}
+    </div>
+  );
+}
+
 export default function PdfReader({ url, title }: { url: string; title: string }) {
   const [mode, setMode] = useState<"ask" | "read" | "google">("ask");
   const [pages, setPages] = useState(0);
-  const [page, setPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [failed, setFailed] = useState(false);
   const [failMsg, setFailMsg] = useState("");
   const [boxWidth, setBoxWidth] = useState(350);
   const boxRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function measure() {
@@ -70,33 +123,21 @@ export default function PdfReader({ url, title }: { url: string; title: string }
   }
 
   return (
-    <div>
-      <div className="mb-2 flex flex-wrap items-center gap-2">
+    <div ref={topRef}>
+      <div className="sticky top-0 z-20 mb-2 flex flex-wrap items-center gap-2 rounded-xl bg-[#FFF5F7]/95 px-2 py-2 shadow-sm backdrop-blur">
         <button onClick={() => setMode("ask")} className="text-sm text-neutral-500">
           ← Voltar
         </button>
-        <div className="mx-auto flex items-center gap-1 rounded-full bg-white px-2 py-1 shadow">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className="px-2 text-lg disabled:opacity-30"
-            aria-label="Página anterior"
-          >
-            ‹
-          </button>
-          <span className="text-sm font-semibold">
-            {page}/{pages || "…"}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(pages || p + 1, p + 1))}
-            disabled={pages > 0 && page >= pages}
-            className="px-2 text-lg disabled:opacity-30"
-            aria-label="Próxima página"
-          >
-            ›
-          </button>
-        </div>
-        <div className="flex items-center gap-1 rounded-full bg-white px-2 py-1 shadow">
+        <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold shadow">
+          {currentPage}/{pages || "…"}
+        </span>
+        <button
+          onClick={() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className="rounded-full bg-white px-3 py-1 text-sm font-semibold shadow"
+        >
+          ⬆ Topo
+        </button>
+        <div className="ml-auto flex items-center gap-1 rounded-full bg-white px-2 py-1 shadow">
           <button
             onClick={() => setZoom((s) => Math.max(0.6, +(s - 0.2).toFixed(1)))}
             className="px-2 font-bold"
@@ -146,7 +187,7 @@ export default function PdfReader({ url, title }: { url: string; title: string }
           </div>
         </div>
       ) : (
-        <div ref={boxRef} className="overflow-auto rounded-2xl bg-neutral-200 p-2 shadow">
+        <div ref={boxRef} className="rounded-2xl bg-neutral-200 p-2 shadow">
           <Document
             file={url}
             onLoadSuccess={({ numPages }) => setPages(numPages)}
@@ -156,12 +197,15 @@ export default function PdfReader({ url, title }: { url: string; title: string }
             }}
             loading={<p className="p-8 text-center text-sm">Abrindo... 📖</p>}
           >
-            <Page
-              pageNumber={page}
-              width={Math.round(boxWidth * zoom)}
-              onRenderError={() => setFailed(true)}
-              loading=""
-            />
+            {Array.from({ length: pages }, (_, i) => (
+              <LazyPage
+                key={i + 1}
+                pageNumber={i + 1}
+                width={Math.round(boxWidth * zoom)}
+                onActive={setCurrentPage}
+                onError={() => setFailed(true)}
+              />
+            ))}
           </Document>
         </div>
       )}
