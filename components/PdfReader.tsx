@@ -8,11 +8,12 @@ import "react-pdf/dist/Page/TextLayer.css";
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 export default function PdfReader({ url, title }: { url: string; title: string }) {
-  const [mode, setMode] = useState<"ask" | "read">("ask");
+  const [mode, setMode] = useState<"ask" | "read" | "google">("ask");
   const [pages, setPages] = useState(0);
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [failed, setFailed] = useState(false);
+  const [failMsg, setFailMsg] = useState("");
   const [boxWidth, setBoxWidth] = useState(350);
   const boxRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +50,21 @@ export default function PdfReader({ url, title }: { url: string; title: string }
             ⬇️ Baixar
           </a>
         </div>
+      </div>
+    );
+  }
+
+  if (mode === "google") {
+    return (
+      <div>
+        <button onClick={() => setMode("ask")} className="mb-2 text-sm text-neutral-500">
+          ← Voltar
+        </button>
+        <iframe
+          src={`https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(url)}`}
+          title={title}
+          className="h-[70vh] w-full rounded-2xl bg-white shadow"
+        />
       </div>
     );
   }
@@ -106,23 +122,38 @@ export default function PdfReader({ url, title }: { url: string; title: string }
       {failed ? (
         <div className="rounded-2xl bg-white p-6 text-center shadow">
           <p className="font-semibold">Não consegui abrir aqui 😕</p>
-          <p className="mt-1 text-sm text-neutral-500">Baixe o arquivo para ler no seu celular:</p>
-          <a
-            href={url}
-            download
-            target="_blank"
-            rel="noreferrer"
-            className="mt-4 inline-block rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white"
-          >
-            ⬇️ Baixar PDF
-          </a>
+          {failMsg && <p className="mx-auto mt-2 max-w-full truncate font-mono text-xs text-neutral-400">{failMsg}</p>}
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <button
+              onClick={() => {
+                setFailed(false);
+                setFailMsg("");
+                setMode("google");
+              }}
+              className="rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white"
+            >
+              Tentar pelo Google
+            </button>
+            <a
+              href={url}
+              download
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border px-6 py-2 font-semibold"
+            >
+              ⬇️ Baixar PDF
+            </a>
+          </div>
         </div>
       ) : (
         <div ref={boxRef} className="overflow-auto rounded-2xl bg-neutral-200 p-2 shadow">
           <Document
             file={url}
             onLoadSuccess={({ numPages }) => setPages(numPages)}
-            onLoadError={() => setFailed(true)}
+            onLoadError={(err) => {
+              setFailed(true);
+              setFailMsg(err instanceof Error ? err.message : String(err?.message || err || ""));
+            }}
             loading={<p className="p-8 text-center text-sm">Abrindo... 📖</p>}
           >
             <Page
