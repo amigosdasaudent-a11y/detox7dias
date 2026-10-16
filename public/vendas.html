@@ -394,15 +394,29 @@ bubble(j.reply,false);hist.push({role:'assistant',content:j.reply});
 (function(){
   var sec=document.getElementById('videoSec'),box=document.getElementById('videoBox');
   if(!sec||!box)return;
+  // Aceita qualquer link do Gumlet e converte para o embed oficial.
+  function gumletEmbed(u){
+    if(!/gumlet/i.test(u))return null;
+    if(/^https?:\/\/play\.gumlet\.io\/embed\//i.test(u))return u;
+    var m;
+    if((m=u.match(/play\.gumlet\.io\/embed\/(playlist\/)?([a-f0-9]{24})/i)))return 'https://play.gumlet.io/embed/'+(m[1]||'')+m[2];
+    if((m=u.match(/gumlet\.tv\/watch\/([a-f0-9]{24})/i)))return 'https://play.gumlet.io/embed/'+m[1];
+    if((m=u.match(/video\.gumlet\.io\/[a-f0-9]{24}\/([a-f0-9]{24})/i)))return 'https://play.gumlet.io/embed/'+m[1];
+    var all=u.match(/[a-f0-9]{24}/gi);
+    if(all&&all.length)return 'https://play.gumlet.io/embed/'+all[all.length-1];
+    return null;
+  }
   fetch('/api/public/sales-video').then(function(r){return r.json()}).then(function(j){
     var u=(j&&j.url?j.url:'').trim();if(!u)return;
     var el;
-    if(/youtu\.be|youtube\.com\/watch/.test(u)){
+    var g=gumletEmbed(u);
+    if(g){u=g;el=document.createElement('iframe');}
+    else if(/youtu\.be|youtube\.com\/watch/.test(u)){
       var yt=u.match(/(?:youtu\.be\/|[?&]v=)([\w-]{11})/);if(!yt)return;
       u='https://www.youtube.com/embed/'+yt[1];el=document.createElement('iframe');
     }else if(/vimeo\.com\/(\d+)/.test(u)&&!/player\.vimeo\.com/.test(u)){
       var vm=u.match(/vimeo\.com\/(\d+)/);u='https://player.vimeo.com/video/'+vm[1];el=document.createElement('iframe');
-    }else if(/gumlet\.io\/embed|youtube\.com\/embed|player\.vimeo\.com/.test(u)){
+    }else if(/youtube\.com\/embed|player\.vimeo\.com/.test(u)){
       el=document.createElement('iframe');
     }else if(/\.m3u8(\?|$)/.test(u)){
       el=document.createElement('video');
@@ -415,6 +429,7 @@ bubble(j.reply,false);hist.push({role:'assistant',content:j.reply});
     if(el.tagName==='IFRAME'){
       el.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen');
       el.setAttribute('allowfullscreen','');el.setAttribute('loading','lazy');
+      el.setAttribute('referrerpolicy','origin');
     }else{el.controls=true;el.playsInline=true;el.setAttribute('controls','');}
     el.style.cssText='width:100%;height:100%;border:0;display:block';
     box.appendChild(el);

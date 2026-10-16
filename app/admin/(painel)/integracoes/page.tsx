@@ -100,9 +100,12 @@ export default function IntegracoesPage() {
       <div className="mt-4 rounded-2xl bg-white p-6 shadow">
         <h2 className="font-bold">🎬 Vídeo da página de vendas</h2>
         <p className="mt-1 text-xs text-neutral-500">
-          Aparece logo abaixo da primeira dobra em <span className="font-mono">/vendas.html</span>. Cole o link de
-          incorporação (embed) do Gumlet — ex: <span className="font-mono">https://play.gumlet.io/embed/xxxx</span> — ou
-          um link direto de vídeo (.mp4 / .m3u8). Deixe vazio para não exibir.
+          Aparece logo abaixo da primeira dobra em <span className="font-mono">/vendas.html</span>. Cole o link de{" "}
+          <b>incorporação (embed)</b> do Gumlet — ex:{" "}
+          <span className="font-mono">https://play.gumlet.io/embed/6a19aa99074b5c6e2bc7405d</span>. Também aceito
+          links do tipo <span className="font-mono">gumlet.tv/watch/…</span> ou{" "}
+          <span className="font-mono">video.gumlet.io/…/main.m3u8</span> (eu converto sozinho), YouTube, Vimeo e arquivos
+          .mp4/.m3u8. Deixe vazio para não exibir.
         </p>
         <label className="mt-4 block text-sm font-semibold">
           Link do vídeo
