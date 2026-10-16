@@ -55,6 +55,29 @@ export default async function VerPage({ params }: { params: Promise<{ id: string
   const isAudio = content.type === "audio";
   const isEbook = content.type === "ebook";
 
+  // Vitrine: mostra TODOS os conteúdos publicados. Os grátis já são do usuário.
+  const { data: vitrineContents } = await supabase
+    .from("contents")
+    .select("id, type, title, cover_path, is_free, min_plan, collection_id")
+    .eq("published", true)
+    .order("sort_order");
+  const vitrine = vitrineContents || [];
+
+  const { data: cols } = await supabase
+    .from("collections")
+    .select("id, title")
+    .eq("published", true);
+  const colTitle = new Map((cols || []).map((c) => [c.id as string, c.title as string]));
+
+  const vCovers = new Map<string, string>();
+  for (const c of vitrine) {
+    if (!c.cover_path) continue;
+    const { data } = await supabase.storage
+      .from("covers")
+      .createSignedUrl(c.cover_path, 600);
+    if (data?.signedUrl) vCovers.set(c.id as string, data.signedUrl);
+  }
+
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 bg-[#FFF5F7] px-4 py-10 md:px-8">
       <a href="/vendas.html" className="text-sm text-neutral-500">← Detox Body Max</a>
@@ -73,14 +96,81 @@ export default async function VerPage({ params }: { params: Promise<{ id: string
       </div>
       <div className="mt-6 rounded-3xl bg-white p-6 text-center shadow">
         <p className="font-bold">Gostou da amostra? 🎉</p>
-        <p className="text-sm text-neutral-500">O programa completo tem muito mais.</p>
-        <a
-          href="/vendas.html#planos"
-          className="mt-4 inline-block rounded-full bg-[#FF4D8D] px-8 py-2 font-semibold text-white"
-        >
-          Ver planos
-        </a>
+        <p className="text-sm text-neutral-500">
+          Crie sua conta grátis e desbloqueie o programa completo.
+        </p>
+        <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
+          <a
+            href="/criar-conta"
+            className="rounded-full border border-[#FF4D8D] px-8 py-2 font-semibold text-[#FF4D8D]"
+          >
+            Criar conta grátis
+          </a>
+          <a
+            href="/vendas.html#planos"
+            className="rounded-full bg-[#FF4D8D] px-8 py-2 font-semibold text-white"
+          >
+            Ver planos
+          </a>
+        </div>
       </div>
+
+      {vitrine.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-lg font-extrabold">🛍 Vitrine do programa</h2>
+          <p className="text-sm text-neutral-500">
+            Veja tudo que tem no app. O que é grátis já é seu. 🎁
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {vitrine.map((c) => {
+              const cover = vCovers.get(c.id as string);
+              const free = !!c.is_free;
+              const href = free ? `/ver/${c.id}` : "/vendas.html#planos";
+              const action =
+                c.type === "ebook" ? "Ler" : c.type === "audio" ? "Ouvir" : "Assistir";
+              const product = c.collection_id ? colTitle.get(c.collection_id as string) : null;
+              return (
+                <a
+                  key={c.id as string}
+                  href={href}
+                  className="relative block overflow-hidden rounded-2xl bg-white shadow hover:shadow-md"
+                >
+                  {cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={cover}
+                      alt={c.title as string}
+                      className="aspect-[3/4] w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex aspect-[3/4] w-full items-center justify-center bg-gradient-to-br from-[#FF4D8D] to-[#B3124F] text-4xl text-white">
+                      {(c.title as string)[0]}
+                    </div>
+                  )}
+                  <span
+                    className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-xs font-bold text-white ${
+                      free ? "bg-emerald-500" : "bg-black/70"
+                    }`}
+                  >
+                    {free ? "JÁ É SEU" : `🔒 ${c.min_plan || "essencial"}`}
+                  </span>
+                  <div className="p-3">
+                    {product && (
+                      <p className="text-[10px] uppercase tracking-wide text-neutral-400">
+                        {product}
+                      </p>
+                    )}
+                    <p className="line-clamp-2 text-sm font-semibold">{c.title}</p>
+                    <span className="mt-1 block text-xs font-semibold text-[#FF4D8D]">
+                      {free ? `${action} →` : "Desbloquear →"}
+                    </span>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

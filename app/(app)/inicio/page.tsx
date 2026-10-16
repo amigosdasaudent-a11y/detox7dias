@@ -28,6 +28,18 @@ export default async function InicioPage() {
     .eq("status", "active");
 
   if (!ents?.length) {
+    // Conta GRÁTIS (sem plano ativo): leva para a vitrine do conteúdo grátis.
+    const svcFree = createServiceClient();
+    const { data: freeContent } = await svcFree
+      .from("contents")
+      .select("id")
+      .eq("published", true)
+      .eq("is_free", true)
+      .order("sort_order")
+      .limit(1)
+      .maybeSingle();
+    if (freeContent) redirect(`/ver/${freeContent.id}`);
+
     return (
       <div className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow">
@@ -56,6 +68,7 @@ export default async function InicioPage() {
   let renewDate = "";
   if (periodEnd) {
     const end = new Date(periodEnd);
+    // eslint-disable-next-line react-hooks/purity
     renewDays = Math.ceil((end.getTime() - Date.now()) / 86_400_000);
     renewDate = end.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
   }

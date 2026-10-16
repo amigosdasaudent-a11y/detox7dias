@@ -60,6 +60,12 @@ export default function LoginPage() {
             Esqueci minha senha
           </Link>
         </p>
+        <p className="mt-2 text-sm">
+          Não comprou ainda?{" "}
+          <Link href="/criar-conta" className="text-[#FF4D8D] font-semibold">
+            Criar conta grátis
+          </Link>
+        </p>
         <p className="mt-2 text-xs text-neutral-500">
           Comprou e não definiu a senha? Abra o e-mail de convite recebido após o
           pagamento.
