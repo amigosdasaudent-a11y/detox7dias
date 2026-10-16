@@ -48,6 +48,14 @@ export default async function AssistirPage({
   const isAudio = content.type === "audio";
   const isEbook = content.type === "ebook";
 
+  let coverUrl: string | null = null;
+  if (content.cover_path) {
+    const { data } = await createServiceClient()
+      .storage.from("covers")
+      .createSignedUrl(content.cover_path, 3600);
+    coverUrl = data?.signedUrl || null;
+  }
+
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:px-8">
       <a href="/inicio" className="text-sm text-neutral-500">← Início</a>
@@ -57,7 +65,7 @@ export default async function AssistirPage({
       )}
       <div className="mt-4">
         {isEbook ? (
-          <PdfReader url={src} title={content.title} />
+          <PdfReader url={src} title={content.title} cover={coverUrl} />
         ) : isAudio ? (
           <audio className="w-full" controls src={src} />
         ) : (

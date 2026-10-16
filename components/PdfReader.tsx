@@ -59,7 +59,15 @@ function LazyPage({
   );
 }
 
-export default function PdfReader({ url, title }: { url: string; title: string }) {
+export default function PdfReader({
+  url,
+  title,
+  cover,
+}: {
+  url: string;
+  title: string;
+  cover?: string | null;
+}) {
   const [mode, setMode] = useState<"ask" | "read" | "google">("ask");
   const [pages, setPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -84,7 +92,16 @@ export default function PdfReader({ url, title }: { url: string; title: string }
   if (mode === "ask") {
     return (
       <div className="rounded-2xl bg-white p-6 text-center shadow">
-        <p className="font-bold">📖 {title}</p>
+        {cover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={cover}
+            alt={title}
+            className="mx-auto mb-4 max-h-72 w-auto rounded-xl object-contain shadow"
+          />
+        ) : (
+          <p className="font-bold">📖 {title}</p>
+        )}
         <p className="mt-1 text-sm text-neutral-500">Como prefere?</p>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
           <button

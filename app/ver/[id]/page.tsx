@@ -55,6 +55,14 @@ export default async function VerPage({ params }: { params: Promise<{ id: string
   const isAudio = content.type === "audio";
   const isEbook = content.type === "ebook";
 
+  let coverUrl: string | null = null;
+  if (content.cover_path) {
+    const { data } = await supabase.storage
+      .from("covers")
+      .createSignedUrl(content.cover_path, 3600);
+    coverUrl = data?.signedUrl || null;
+  }
+
   // Vitrine: mostra TODOS os conteúdos publicados. Os grátis já são do usuário.
   const { data: vitrineContents } = await supabase
     .from("contents")
@@ -87,32 +95,12 @@ export default async function VerPage({ params }: { params: Promise<{ id: string
       )}
       <div className="mt-4">
         {isEbook ? (
-          <PdfReader url={src} title={content.title} />
+          <PdfReader url={src} title={content.title} cover={coverUrl} />
         ) : isAudio ? (
           <audio className="w-full" controls src={src} />
         ) : (
           <VideoPlayer src={src} title={content.title} />
         )}
-      </div>
-      <div className="mt-6 rounded-3xl bg-white p-6 text-center shadow">
-        <p className="font-bold">Gostou da amostra? 🎉</p>
-        <p className="text-sm text-neutral-500">
-          Crie sua conta grátis e desbloqueie o programa completo.
-        </p>
-        <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
-          <a
-            href="/criar-conta"
-            className="rounded-full border border-[#FF4D8D] px-8 py-2 font-semibold text-[#FF4D8D]"
-          >
-            Criar conta grátis
-          </a>
-          <a
-            href="/vendas.html#planos"
-            className="rounded-full bg-[#FF4D8D] px-8 py-2 font-semibold text-white"
-          >
-            Ver planos
-          </a>
-        </div>
       </div>
 
       {vitrine.length > 0 && (
