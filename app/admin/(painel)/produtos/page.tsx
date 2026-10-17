@@ -32,16 +32,22 @@ export default function ProdutosPage() {
   const [cover, setCover] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [cats, setCats] = useState<{ id: string; name: string }[]>([]);
 
-  const categories = [
-    ...new Set(items.map((c) => (c.category || "").trim()).filter(Boolean)),
-  ];
+  const catNames = cats.map((c) => c.name);
+  const catOptions =
+    category && !catNames.includes(category) ? [...catNames, category] : catNames;
 
   async function load() {
     const res = await fetch("/api/admin/collections");
     if (res.status === 401) return (window.location.href = "/admin/login");
     const json = await res.json();
     setItems(json.collections || []);
+    const rc = await fetch("/api/admin/categories");
+    if (rc.ok) {
+      const jc = await rc.json();
+      setCats(jc.categories || []);
+    }
   }
   useEffect(() => {
     load();
@@ -142,18 +148,21 @@ export default function ProdutosPage() {
           <h2 className="font-bold">{editing ? "Editar produto" : "Novo produto"}</h2>
           <input className="rounded-xl border px-4 py-2" placeholder="Nome do produto" required value={title} onChange={(e) => setTitle(e.target.value)} />
           <textarea className="rounded-xl border px-4 py-2" placeholder="Descrição (opcional)" value={description} onChange={(e) => setDescription(e.target.value)} />
-          <input
-            className="rounded-xl border px-4 py-2"
-            placeholder="Categoria (ex: Sexualidade, Saúde da Mulher, Espiritualidade)"
-            list="categorias"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
-          <datalist id="categorias">
-            {categories.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
+          <label className="text-sm font-semibold">
+            Categoria (organiza a tela inicial — edite a lista em Categorias)
+            <select
+              className="mt-1 block w-full rounded-xl border px-4 py-2 font-normal"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="">Sem categoria</option>
+              {catOptions.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="text-sm font-semibold">
             Plano mínimo (quem tem esse plano ou maior enxerga)
             <select className="mt-1 block w-full rounded-xl border px-4 py-2 font-normal" value={plan} onChange={(e) => setPlan(e.target.value)}>

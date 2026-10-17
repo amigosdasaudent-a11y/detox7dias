@@ -36,6 +36,7 @@ async function upload(file: File, bucket: string): Promise<string> {
 export default function ConteudosPage() {
   const [items, setItems] = useState<Content[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [cats, setCats] = useState<{ id: string; name: string }[]>([]);
   const [filter, setFilter] = useState<string>("all");
   const [showForm, setShowForm] = useState(false);
   const [type, setType] = useState("video");
@@ -57,16 +58,25 @@ export default function ConteudosPage() {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const catNameList = cats.map((c) => c.name);
+  const catOptions =
+    eCategory && !catNameList.includes(eCategory) ? [...catNameList, eCategory] : catNameList;
+
   async function load() {
-    const [rc, rq] = await Promise.all([
+    const [rc, rq, rcat] = await Promise.all([
       fetch("/api/admin/contents"),
       fetch("/api/admin/collections"),
+      fetch("/api/admin/categories"),
     ]);
     if (rc.status === 401) return (window.location.href = "/admin/login");
     const jc = await rc.json();
     setItems(jc.contents || []);
     const jq = await rq.json();
     setCollections(jq.collections || []);
+    if (rcat.ok) {
+      const jcat = await rcat.json();
+      setCats(jcat.categories || []);
+    }
   }
   useEffect(() => {
     load();
@@ -317,7 +327,12 @@ export default function ConteudosPage() {
             <div className="flex gap-2">
               <label className="w-full text-sm font-semibold">
                 Categoria
-                <input className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" placeholder="Categoria" value={eCategory} onChange={(e) => setECategory(e.target.value)} />
+                <select className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" value={eCategory} onChange={(e) => setECategory(e.target.value)}>
+                  <option value="">Sem categoria</option>
+                  {catOptions.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </label>
               <label className="text-sm font-semibold">
                 Plano mínimo

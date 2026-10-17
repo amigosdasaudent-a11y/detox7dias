@@ -112,6 +112,16 @@ export default async function InicioPage() {
   for (const p of products || []) bucket(p.category).products.push(p);
   for (const c of loose) bucket(c.category).loose.push(c);
 
+  // Ordem das categorias definida no admin (as que não estão na lista vão por último).
+  const { data: catRows } = await supabase
+    .from("categories")
+    .select("name, sort_order")
+    .order("sort_order");
+  const catOrder = new Map((catRows || []).map((c, i) => [c.name as string, i]));
+  const orderedSections = [...sections.entries()].sort(
+    (a, b) => (catOrder.get(a[0]) ?? 9999) - (catOrder.get(b[0]) ?? 9999)
+  );
+
   const svc = createServiceClient();
   async function sign(bucket: string, path: string | null): Promise<string | null> {
     if (!path) return null;
@@ -167,7 +177,7 @@ export default async function InicioPage() {
         <p className="mt-2 text-sm text-neutral-500">Nenhum produto publicado ainda.</p>
       )}
 
-      {[...sections.entries()].map(([category, { products: ps, loose: ls }]) => (
+      {orderedSections.map(([category, { products: ps, loose: ls }]) => (
         <div key={category} className="mt-6">
           <h3 className="text-base font-bold text-[#B3124F]">{category}</h3>
 
