@@ -16,7 +16,7 @@ export async function GET() {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("collections")
-    .select("id, title, description, cover_path, min_plan, sort_order, published, contents(count)")
+    .select("id, title, description, cover_path, min_plan, sort_order, published, category, contents(count)")
     .order("sort_order");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ collections: data });
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
       description: b.description || null,
       cover_path: b.cover_path || null,
       min_plan: b.min_plan || "essencial",
+      category: b.category || null,
       sort_order: (max?.sort_order ?? -1) + 1,
     })
     .select()

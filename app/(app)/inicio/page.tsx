@@ -85,7 +85,7 @@ export default async function InicioPage() {
 
   const { data: allProducts } = await supabase
     .from("collections")
-    .select("id, title, description, cover_path, min_plan")
+    .select("id, title, description, cover_path, min_plan, category")
     .eq("published", true)
     .order("sort_order");
   const products = (allProducts || []).filter((p) => planAllowed(p.min_plan, userPlan));
@@ -98,12 +98,19 @@ export default async function InicioPage() {
     .order("sort_order")
     .limit(24);
   const loose = (allLoose || []).filter((c) => planAllowed(c.min_plan, userPlan));
-  const looseGroups = new Map<string, typeof loose>();
-  for (const c of loose) {
-    const g = (c.category || "").trim() || "Avulsos";
-    if (!looseGroups.has(g)) looseGroups.set(g, []);
-    looseGroups.get(g)!.push(c);
+
+  // Agrupa produtos e aulas avulsas pela categoria definida no admin.
+  const sections = new Map<
+    string,
+    { products: typeof products; loose: typeof loose }
+  >();
+  function bucket(key: string | null | undefined) {
+    const k = (key || "").trim() || "Outros";
+    if (!sections.has(k)) sections.set(k, { products: [], loose: [] });
+    return sections.get(k)!;
   }
+  for (const p of products || []) bucket(p.category).products.push(p);
+  for (const c of loose) bucket(c.category).loose.push(c);
 
   const svc = createServiceClient();
   async function sign(bucket: string, path: string | null): Promise<string | null> {
@@ -156,48 +163,54 @@ export default async function InicioPage() {
       <NovidadesCard />
 
       <h2 className="mt-8 text-lg font-bold">Meus produtos</h2>
-      {(products || []).length === 0 && (
+      {sections.size === 0 && (
         <p className="mt-2 text-sm text-neutral-500">Nenhum produto publicado ainda.</p>
       )}
-      <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {(products || []).map((p) => {
-          const cover = productCovers.get(p.id);
-          return (
-            <a key={p.id} href={`/produto/${p.id}`} className="overflow-hidden rounded-2xl bg-white shadow hover:shadow-md">
-              {cover ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={cover} alt={p.title} className="aspect-[16/10] w-full object-cover" />
-              ) : (
-                <div className="flex aspect-[16/10] w-full items-center justify-center bg-gradient-to-br from-[#FF4D8D] to-[#B3124F] text-4xl text-white">
-                  📚
-                </div>
-              )}
-              <div className="p-4">
-                <p className="font-bold">{p.title}</p>
-                {p.description && (
-                  <p className="mt-1 line-clamp-2 text-sm text-neutral-500">{p.description}</p>
-                )}
-                <span className="mt-2 block h-1 w-10 rounded-full bg-[#FF4D8D]" />
-                <span className="mt-1 block text-xs font-semibold text-[#FF4D8D]">Abrir →</span>
-              </div>
-            </a>
-          );
-        })}
-      </div>
 
-      {[...looseGroups.entries()].map(([group, items]) => (
-        <div key={group} className="mt-8">
-          <h2 className="text-lg font-bold">{group}</h2>
-          <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {items.map((c) => (
-              <a key={c.id} href={`/assistir/${c.id}`} className="rounded-2xl bg-white p-4 shadow hover:shadow-md">
-                <p className="line-clamp-2 text-sm font-semibold">{c.title}</p>
-                <span className="mt-1 block text-xs font-semibold text-[#FF4D8D]">
-                  {c.type === "ebook" ? "Ler" : c.type === "audio" ? "Ouvir" : "Assistir"} →
-                </span>
-              </a>
-            ))}
-          </div>
+      {[...sections.entries()].map(([category, { products: ps, loose: ls }]) => (
+        <div key={category} className="mt-6">
+          <h3 className="text-base font-bold text-[#B3124F]">{category}</h3>
+
+          {ps.length > 0 && (
+            <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {ps.map((p) => {
+                const cover = productCovers.get(p.id);
+                return (
+                  <a key={p.id} href={`/produto/${p.id}`} className="overflow-hidden rounded-2xl bg-white shadow hover:shadow-md">
+                    {cover ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={cover} alt={p.title} className="aspect-[16/10] w-full object-cover" />
+                    ) : (
+                      <div className="flex aspect-[16/10] w-full items-center justify-center bg-gradient-to-br from-[#FF4D8D] to-[#B3124F] text-4xl text-white">
+                        📚
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <p className="font-bold">{p.title}</p>
+                      {p.description && (
+                        <p className="mt-1 line-clamp-2 text-sm text-neutral-500">{p.description}</p>
+                      )}
+                      <span className="mt-2 block h-1 w-10 rounded-full bg-[#FF4D8D]" />
+                      <span className="mt-1 block text-xs font-semibold text-[#FF4D8D]">Abrir →</span>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+
+          {ls.length > 0 && (
+            <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {ls.map((c) => (
+                <a key={c.id} href={`/assistir/${c.id}`} className="rounded-2xl bg-white p-4 shadow hover:shadow-md">
+                  <p className="line-clamp-2 text-sm font-semibold">{c.title}</p>
+                  <span className="mt-1 block text-xs font-semibold text-[#FF4D8D]">
+                    {c.type === "ebook" ? "Ler" : c.type === "audio" ? "Ouvir" : "Assistir"} →
+                  </span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       ))}
 

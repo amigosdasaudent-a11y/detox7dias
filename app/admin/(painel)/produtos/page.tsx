@@ -10,6 +10,7 @@ type Collection = {
   description: string | null;
   cover_path: string | null;
   min_plan: string;
+  category: string | null;
   sort_order: number;
   published: boolean;
   contents: { count: number }[];
@@ -27,9 +28,14 @@ export default function ProdutosPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [plan, setPlan] = useState("essencial");
+  const [category, setCategory] = useState("");
   const [cover, setCover] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const categories = [
+    ...new Set(items.map((c) => (c.category || "").trim()).filter(Boolean)),
+  ];
 
   async function load() {
     const res = await fetch("/api/admin/collections");
@@ -46,6 +52,7 @@ export default function ProdutosPage() {
     setTitle(c.title);
     setDescription(c.description || "");
     setPlan(c.min_plan || "essencial");
+    setCategory(c.category || "");
     setCover(null);
     setShowForm(true);
     window.scrollTo({ top: 0 });
@@ -56,6 +63,7 @@ export default function ProdutosPage() {
     setTitle("");
     setDescription("");
     setPlan("essencial");
+    setCategory("");
     setCover(null);
     setShowForm(false);
   }
@@ -67,7 +75,12 @@ export default function ProdutosPage() {
     try {
       let cover_path: string | null = null;
       if (cover) cover_path = await upload(cover);
-      const payload: Record<string, unknown> = { title, description: description || null, min_plan: plan };
+      const payload: Record<string, unknown> = {
+        title,
+        description: description || null,
+        min_plan: plan,
+        category: category.trim() || null,
+      };
       if (cover_path) payload.cover_path = cover_path;
       let res: Response;
       if (editing) {
@@ -129,6 +142,18 @@ export default function ProdutosPage() {
           <h2 className="font-bold">{editing ? "Editar produto" : "Novo produto"}</h2>
           <input className="rounded-xl border px-4 py-2" placeholder="Nome do produto" required value={title} onChange={(e) => setTitle(e.target.value)} />
           <textarea className="rounded-xl border px-4 py-2" placeholder="Descrição (opcional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <input
+            className="rounded-xl border px-4 py-2"
+            placeholder="Categoria (ex: Sexualidade, Saúde da Mulher, Espiritualidade)"
+            list="categorias"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
+          <datalist id="categorias">
+            {categories.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
           <label className="text-sm font-semibold">
             Plano mínimo (quem tem esse plano ou maior enxerga)
             <select className="mt-1 block w-full rounded-xl border px-4 py-2 font-normal" value={plan} onChange={(e) => setPlan(e.target.value)}>
@@ -163,7 +188,10 @@ export default function ProdutosPage() {
             </div>
             <div className="p-4">
               <p className="font-bold">{c.title}</p>
-              <p className="text-sm text-neutral-500">{c.contents?.[0]?.count ?? 0} aulas • plano {c.min_plan || "essencial"}+</p>
+              <p className="text-sm text-neutral-500">
+                {c.category ? `${c.category} • ` : ""}
+                {c.contents?.[0]?.count ?? 0} aulas • plano {c.min_plan || "essencial"}+
+              </p>
               <div className="mt-3 flex gap-4 text-sm">
                 <button onClick={() => toggle(c)} className="font-semibold text-[#FF4D8D]">
                   {c.published ? "Ocultar produto" : "Mostrar produto"}
