@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { maxPlan, planAllowed } from "@/lib/plan";
-import VideoPlayer from "@/components/VideoPlayer";
+import { getProgram } from "@/lib/programs";
+import ProgressCard from "@/components/acompanhamento/ProgressCard";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,19 @@ export default async function ProdutoPage({
     .order("sort_order");
   const contents = allContents || [];
 
+  // Acompanhamento (só nos produtos ligados a um programa).
+  const program = getProgram(product.program_id);
+  let enrollment: { start_date: string; status: string } | null = null;
+  if (program) {
+    const { data } = await supabase
+      .from("program_enrollments")
+      .select("start_date, status")
+      .eq("user_id", user.id)
+      .eq("program_id", program.id)
+      .maybeSingle();
+    enrollment = data;
+  }
+
   const svc = createServiceClient();
   async function sign(bucket: string, path: string | null): Promise<string | null> {
     if (!path) return null;
@@ -99,6 +113,8 @@ export default async function ProdutoPage({
           )}
         </div>
       </div>
+
+      {program && <ProgressCard program={program} enrollment={enrollment} />}
 
       <AulaSection title="📖 E-books" items={ebooks} covers={covers} action="Ler" userPlan={userPlan} />
       <AulaSection title="🎧 Áudios" items={audios} covers={covers} action="Ouvir" userPlan={userPlan} />

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import FileDrop from "@/components/FileDrop";
 import AdminPreviewImg from "@/components/AdminPreviewImg";
+import { listPrograms } from "@/lib/programs";
 
 type Collection = {
   id: string;
@@ -11,6 +12,7 @@ type Collection = {
   cover_path: string | null;
   min_plan: string;
   category: string | null;
+  program_id: string | null;
   sort_order: number;
   published: boolean;
   contents: { count: number }[];
@@ -29,6 +31,7 @@ export default function ProdutosPage() {
   const [description, setDescription] = useState("");
   const [plan, setPlan] = useState("essencial");
   const [category, setCategory] = useState("");
+  const [programId, setProgramId] = useState("");
   const [cover, setCover] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -59,6 +62,7 @@ export default function ProdutosPage() {
     setDescription(c.description || "");
     setPlan(c.min_plan || "essencial");
     setCategory(c.category || "");
+    setProgramId(c.program_id || "");
     setCover(null);
     setShowForm(true);
     window.scrollTo({ top: 0 });
@@ -70,6 +74,7 @@ export default function ProdutosPage() {
     setDescription("");
     setPlan("essencial");
     setCategory("");
+    setProgramId("");
     setCover(null);
     setShowForm(false);
   }
@@ -86,6 +91,7 @@ export default function ProdutosPage() {
         description: description || null,
         min_plan: plan,
         category: category.trim() || null,
+        program_id: programId || null,
       };
       if (cover_path) payload.cover_path = cover_path;
       let res: Response;
@@ -169,6 +175,21 @@ export default function ProdutosPage() {
               <option value="essencial">Essencial (todos veem)</option>
               <option value="completo">Completo</option>
               <option value="vitalicio">Vitalício</option>
+            </select>
+          </label>
+          <label className="text-sm font-semibold">
+            Acompanhamento (mostra o card &quot;Meu acompanhamento&quot; no produto)
+            <select
+              className="mt-1 block w-full rounded-xl border px-4 py-2 font-normal"
+              value={programId}
+              onChange={(e) => setProgramId(e.target.value)}
+            >
+              <option value="">Nenhum</option>
+              {listPrograms().map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title}
+                </option>
+              ))}
             </select>
           </label>
           <FileDrop
