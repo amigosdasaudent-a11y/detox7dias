@@ -32,9 +32,10 @@ Server-only secrets: `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_W
 - **Next 16**: `layout.tsx` uses `LayoutProps<"/">`; `next.config.ts` has `cacheComponents: false` and Turbopack CSS rule for Tailwind. The top-of-file Next.js warning block is auto-managed by `next dev` — keep as-is.
 
 ## Where to look
-- Routes: `app/api/checkout`, `app/api/stripe/webhook`, `app/api/signed-url`, `app/admin/*`
-- Lib: `lib/stripe.ts`, `lib/supabase/*`, `lib/settings.ts`, `lib/admin.ts`
+- Routes: `app/api/checkout`, `app/api/stripe/webhook`, `app/api/signed-url`, `app/api/acompanhamento`, `app/admin/*`
+- Lib: `lib/stripe.ts`, `lib/supabase/*`, `lib/settings.ts`, `lib/admin.ts`, `lib/programs/*`, `lib/imc.ts`
 - Schema: `supabase/schema.sql`, `supabase/migrations/`
+- Docs: `docs/01-logica-e-telas.md` (mapa de telas), `docs/02-cadastros.md` e `docs/03-manual-admin.md` (operacional), `docs/04-acompanhamento.md` (módulo dia a dia)
 
 <!-- BEGIN:nextjs-agent-rules -->
 

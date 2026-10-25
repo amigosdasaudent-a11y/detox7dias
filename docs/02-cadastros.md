@@ -8,11 +8,25 @@ Tudo é feito em `https://detox7dias.vercel.app/admin` com a **senha master** (g
 
 1. **Nome do produto** (ex: `Detox Body Max - 14 dias`).
 2. **Descrição** (opcional; aparece dentro do produto, no app).
-3. **Capa do produto**: Escolher ficheiro (imagem; sobe sozinha ao Salvar).
-4. **Salvar produto**.
-5. Na lista: **Mostrar/Ocultar produto** (oculto some do app com tudo dentro), **✏️ Editar**, **Excluir** (as aulas ficam soltas, não são apagadas).
+3. **Categoria** (agrupa os produtos na tela inicial; a lista é editada em Categorias).
+4. **Plano mínimo**: Essencial (todos veem) / Completo / Vitalício.
+5. **Acompanhamento**: escolha o programa de dia a dia (hoje só existe **Desafio Detox 7 Dias**). Deixe em **Nenhum** para produtos sem acompanhamento.
+6. **Capa do produto**: Escolher ficheiro (imagem; sobe sozinha ao Salvar).
+7. **Salvar produto**.
+8. Na lista: **Mostrar/Ocultar produto** (oculto some do app com tudo dentro), **✏️ Editar**, **Excluir** (as aulas ficam soltas, não são apagadas).
 
 Onde aparece: `/inicio` → **Meus produtos** (capa → clica → `/produto/[id]` com as aulas separadas por tipo). Contador no dashboard.
+
+### 1.1 Acompanhamento (dia a dia) dentro do produto
+
+Só aparece no app quando o produto tem **Acompanhamento** selecionado. O cliente vê o card **📅 Meu acompanhamento** no topo da página do produto.
+
+- **Antes de começar**: triagem de segurança (bloqueia menores, gestantes/lactantes, diabetes, doença renal/hepática e histórico de transtorno alimentar; medicação contínua exige confirmação médica), medidas iniciais e IMC. **IMC abaixo de 18,5 não deixa iniciar** o desafio de 7 dias.
+- **Durante**: plano do dia, jejum, contador de ovos (alerta de 5h) ou maçãs, checklist, água e check-in diário.
+- **No fim**: medidas finais, comparativo início × fim e fotos privadas.
+- O botão **⚠️ Estou me sentindo mal** aparece em todas as telas do acompanhamento (registra o sintoma e pode pausar o desafio).
+
+A escolha do programa é só uma ligação: o **acesso continua sendo pelo plano** (entitlements). Detalhes técnicos em `docs/04-acompanhamento.md`.
 
 ## 2. Conteúdo: e-book, áudio ou vídeo (a "aula")
 
@@ -89,6 +103,8 @@ Vendas pela Stripe liberam sozinhas (webhook); aqui é só para vendas manuais. 
 | Cadastrei... | Confiro em... | Espero ver... |
 |---|---|---|
 | Produto (visível) | `/inicio` | Card com capa em Meus produtos |
+| Produto com Acompanhamento | `/produto/[id]` | Card **📅 Meu acompanhamento** acima das aulas |
+| Acompanhamento iniciado | `/progresso` | Card do desafio com dia atual e medidas |
 | Aula (visível, com produto) | `/produto/[id]` | Card na seção do tipo |
 | Aula (visível, sem produto) | `/inicio` → Avulsos | Link Ler/Ouvir/Assistir |
 | Banner (ativo) | topo do `/inicio` | Imagem no carrossel |

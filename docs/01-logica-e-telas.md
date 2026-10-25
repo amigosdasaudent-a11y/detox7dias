@@ -1,6 +1,6 @@
 # Detox Body Max — Documento Técnico (lógica do programa)
 
-Data: 08/10/2026. Atualizado em 09/10/2026. Estado: produção em `https://detox7dias.vercel.app`.
+Data: 08/10/2026. Atualizado em 25/10/2026 (módulo "Meu acompanhamento" — ver `docs/04-acompanhamento.md`). Estado: produção em `https://detox7dias.vercel.app`.
 
 ## 1. Visão geral
 
@@ -45,13 +45,20 @@ Sidebar: Início, Loja, Blog, IMC, Módulos salvos, Meu progresso, Instalar App,
 | Rota | Estado |
 |---|---|
 | `/inicio` | ✅ Banner rotativo (setas + dots) + card 🔔 Novidades + grade **Meus produtos** (capa → abre) + seções de **avulsos por categoria** (fallback "Avulsos") + card IMC |
-| `/produto/[id]` | ✅ Capa do produto + aulas separadas (E-books, Áudios, Vídeos) |
+| `/produto/[id]` | ✅ Capa do produto + card **📅 Meu acompanhamento** (quando o produto tem programa) + aulas separadas (E-books, Áudios, Vídeos) |
+| `/acompanhamento/[programId]` | ✅ Painel do acompanhamento: progresso, sequência, dia de hoje, jornada, medidas, avisos |
+| `/acompanhamento/[programId]/iniciar` | ✅ Wizard: triagem de segurança → medidas/IMC/fotos → configuração |
+| `/acompanhamento/[programId]/dia/[dia]` | ✅ Plano do dia: refeições, jejum, contador de ovos/maçãs, checklist, água |
+| `/acompanhamento/[programId]/checkin/[dia]` | ✅ Check-in diário (água, sono, energia, humor, sintomas, medidas opcionais) |
+| `/acompanhamento/[programId]/resultado` | ✅ Comparativo início × fim, médias, gráfico de peso, fotos privadas |
+| `/progresso` | ✅ Histórico por programa (progresso, medidas início/fim, atalhos) |
 | `/assistir/[id]` | ✅ Player universal (YouTube/Vimeo/MP4/HLS) ou `<audio>`; arquivos via URL assinada 10 min |
 | `/quiz` | ✅ 5 perguntas ativas; salva em `quiz_answers` e marca `profiles.quiz_completed` |
 | `/loja` | ✅ Cards da loja (WhatsApp/externo), selo "Libera o app" |
-| `/imc`, `/salvos`, `/progresso`, `/instalar`, `/pesquisar`, `/alterar-senha` | ❌ Ainda não criadas (404). Sidebar aponta, telas pendentes |
+| `/imc` | ✅ Calculadora de IMC + histórico (IA JEV como guardrail) |
+| `/salvos`, `/instalar`, `/pesquisar`, `/alterar-senha` | ❌ Ainda não criadas (404). Sidebar aponta, telas pendentes |
 
-Regra de acesso: `/inicio`, `/produto/*`, `/assistir/*` exigem `entitlements` com `status=active`; sem acesso mostra "Acesso não encontrado". Sem login redireciona a `/login`. Primeiro acesso com `quiz_completed=false` vai ao `/quiz`.
+Regra de acesso: `/inicio`, `/produto/*`, `/assistir/*` e `/acompanhamento/*` exigem `entitlements` com `status=active`; sem acesso mostra "Acesso não encontrado". Sem login redireciona a `/login`. Primeiro acesso com `quiz_completed=false` vai ao `/quiz`. No acompanhamento, além do plano, é preciso triagem aprovada + inscrição no programa.
 
 ### 3.3 Admin (só senha master, cookie httpOnly 12h)
 | Rota | O que faz |
@@ -59,7 +66,7 @@ Regra de acesso: `/inicio`, `/produto/*`, `/assistir/*` exigem `entitlements` co
 | `/admin/login` | Digita a senha master (`POST /api/admin/session` grava cookie HMAC) |
 | `/admin` | Dashboard com contadores + atalhos |
 | `/admin/banners` | Upload de imagem (Storage `covers`) + link opcional + Ativo/Inativo + excluir. Prévia da imagem |
-| `/admin/produtos` | CRUD de produtos de conteúdo (capa, título, descrição) + **Mostrar/Ocultar produto** (some do app com tudo dentro) + editar/excluir |
+| `/admin/produtos` | CRUD de produtos de conteúdo (capa, título, descrição, categoria, plano) + **Acompanhamento** (liga o produto a um programa: mostra o card "Meu acompanhamento") + **Mostrar/Ocultar produto** (some do app com tudo dentro) + editar/excluir |
 | `/admin/conteudos` | E-book (PDF upload), áudio (MP3 upload), vídeo (MP4 upload **ou** URL YouTube/Vimeo/Gumlet) + capa + produto dono + plano mínimo + filtro por produto + editar (modal com tipo) + 👁 ocultar + excluir |
 | `/admin/quiz` | Editor pergunta a pergunta: texto (salva ao sair do campo), toggle ativo, excluir, adicionar alternativa/excluir, adicionar pergunta |
 | `/admin/blog` | Novo artigo (título, Markdown, capa, publicado), editar, publicar/despublicar, excluir |
@@ -94,8 +101,11 @@ vendas.html --POST /api/checkout {plan}--> sessão Checkout (mode auto: subscrip
 
 ## 6. Banco (Supabase)
 
-Tabelas: `profiles` (1 por `auth.users`, trigger `handle_new_user`), `entitlements`, `stripe_events`, `banners`, `collections` (produtos; migration `002`), `contents` (+`collection_id`; migration `002`), `quiz_questions`, `quiz_options`, `quiz_answers`, `favorites`, `progress`, `posts`, `products` (+`kind`,`target_url`,`grants_plan`; migration `003`), `imc_history`, `settings` (chaves Stripe teste/live + links de vendas; migration `004`, RLS sem policies = só servidor).
-Schema base: `supabase/schema.sql`; migrations `002`, `003`, `004` (aplicar via `node scripts/apply-sql.mjs <arq>` com `DATABASE_URL` do pooler).
+Tabelas: `profiles` (1 por `auth.users`, trigger `handle_new_user`), `entitlements`, `stripe_events`, `banners`, `collections` (produtos; migration `002`; `program_id` na `011`), `contents` (+`collection_id`; migration `002`), `quiz_questions`, `quiz_options`, `quiz_answers`, `favorites`, `progress`, `posts`, `products` (+`kind`,`target_url`,`grants_plan`; migration `003`), `imc_history`, `settings` (chaves Stripe teste/live + links de vendas; migration `004`, RLS sem policies = só servidor), `categories` (migration `010`).
+
+**Acompanhamento** (migration `011_programas.sql`): `program_enrollments`, `program_screenings`, `program_measures`, `program_day_progress`, `program_checkins`, `program_symptom_logs` — RLS por dono (`user_id = auth.uid() or is_admin()`), únicos por `(user_id, program_id[, day|moment])`. Detalhes em `docs/04-acompanhamento.md`.
+
+Schema base: `supabase/schema.sql`; migrations `002` a `011` (aplicar via `node scripts/apply-sql.mjs <arq>` com `DATABASE_URL` do pooler, ou colar no SQL Editor do Supabase).
 Segurança: RLS ativo; leitura pública só de publicados; escrita de conteúdo só admin; buckets `covers` e `content-files` **privados** (entrega por URL assinada); `service_role` e segredos só no servidor. Recomendado: desligar cadastro público (Auth → Sign In/Up).
 
 ## 7. Scripts (`scripts/`, todos leem `.env.local`, nada hardcoded)
@@ -104,7 +114,8 @@ Segurança: RLS ativo; leitura pública só de publicados; escrita de conteúdo 
 
 ## 8. Pendências conhecidas
 
-- Telas do menu ainda 404: `/imc` (+IA JEV Fase 5), `/salvos` (favoritos), `/progresso`, `/instalar`, `/pesquisar`, `/alterar-senha`.
+- Telas do menu ainda 404: `/salvos` (favoritos), `/instalar`, `/pesquisar`, `/alterar-senha`.
+- **Acompanhamento**: só o **Detox 7 Dias** existe. O Detox 15 Dias depende de criar `lib/programs/detox15.ts` + registrar em `lib/programs/index.ts` (passo a passo em `docs/04-acompanhamento.md`, seção 9). Lembretes push/WhatsApp e sincronização offline ficam para depois.
 - Vídeos: prefira **MP4 ou YouTube**; Gumlet `.m3u8` com token dá tela preta (player agora mostra mensagem de erro em vez de travar).
 - **Plano mínimo** (`lib/plan.ts`): essencial < completo < vitalicio; produto/aula de plano superior aparece com 🔒 e só abre com upgrade (telas `/produto/[id]` e `/ver/[id]`).
 - **Áudio por link externo** (jukehost etc.), sem upload; **PDF** no Storage com leitor próprio (`components/PdfReader.tsx`, zoom A-/A+, worker local, fallback "Tentar pelo Google").

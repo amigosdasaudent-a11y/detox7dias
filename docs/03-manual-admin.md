@@ -53,11 +53,26 @@ Regras de ouro:
 **+ Novo Produto:**
 1. Nome (ex: `Detox Body Max - 14 dias`)
 2. Descrição (opcional)
-3. Capa do produto (upload)
+3. **Categoria** (organiza a tela inicial; a lista é editada em Categorias)
 4. **Plano mínimo**: Essencial (todos veem) / Completo / Vitalício
-5. Salvar
+5. **Acompanhamento**: escolha o programa de dia a dia (hoje só existe **Desafio Detox 7 Dias**). Em **Nenhum**, o produto fica sem acompanhamento.
+6. Capa do produto (upload)
+7. Salvar
 
 Lista: mostra prévia da capa, nº de aulas e "plano X+". Ações: **Mostrar/Ocultar produto** (oculto some do app com tudo dentro), **✏️ Editar**, **Excluir** (aulas ficam soltas, não apagam).
+
+### 3.1 Acompanhamento (dia a dia)
+
+Com **Acompanhamento** selecionado, o cliente vê o card **📅 Meu acompanhamento** dentro do produto.
+
+- **Início**: triagem de segurança → medidas iniciais + IMC (fotos opcionais) → data de início, intolerância a ovo e horários.
+- **Bloqueios automáticos**: menor de 18, gestante/lactante, diabetes, doença renal/hepática, transtorno alimentar. Medicação contínua exige confirmação médica. **IMC abaixo de 18,5 não inicia** o desafio de 7 dias.
+- **Dia a dia**: refeições marcáveis, jejum, contador de ovos (alerta de 5h sem comer) ou de maçãs, checklist, água e "Concluir dia".
+- **Check-in diário**: água, sono, energia, humor, sintomas e peso/cintura opcionais.
+- **Resultado**: comparativo início × fim, IMC, médias e fotos privadas (só o próprio cliente vê).
+- **Segurança**: botão **⚠️ Estou me sentindo mal** em todas as telas, com opção de pausar o desafio; rodapé informativo fixo e nenhuma promessa de emagrecimento.
+
+O acesso continua sendo pelo **plano** (não é o acompanhamento que libera o produto). Detalhes técnicos e roteiro de teste em `docs/04-acompanhamento.md`.
 
 ---
 
@@ -179,6 +194,8 @@ Clientes se inscrevem pelo card **🔔 QUER RECEBER NOVIDADES?** no Início (nom
 | Cadastrei... | Confiro em... | Espero ver... |
 |---|---|---|
 | Produto (Visível) | `/inicio` | Card em Meus produtos |
+| Produto com Acompanhamento | `/produto/[id]` | Card **📅 Meu acompanhamento** |
+| Acompanhamento iniciado | `/progresso` | Card do desafio com dia atual |
 | Aula Visível com produto | `/produto/[id]` | Card na seção do tipo |
 | Aula Visível sem produto | `/inicio` | Seção com o nome da categoria (ou Avulsos) |
 | Aula 🎁 Grátis | link `/ver/[id]` | Abre sem login |
@@ -195,6 +212,7 @@ Clientes se inscrevem pelo card **🔔 QUER RECEBER NOVIDADES?** no Início (nom
 - **Imagem/arquivo não envia**: use a caixa tracejada (não clique em "vazio"). Arquivo grande (>~50 MB) pode estourar — PDFs grandes, divida.
 - **PDF não abre no celular**: use **"Tentar pelo Google"** na tela de erro, ou **Baixar**. O motivo aparece em cinza claro.
 - **Cadastrei e não aparece**: confira selo Visível/Publicado/Ativo/🎁, plano mínimo, nome da categoria (grafias diferentes = seções diferentes) e faça **Ctrl+F5** no app.
+- **Acompanhamento não aparece no produto**: confira em **Produtos → Acompanhamento** se o programa está selecionado e salve. Se o cliente já iniciou e quer recomeçar, o histórico fica em `/progresso` (não há botão de "reset" no admin).
 - **Áudio não toca**: o link precisa ser MP3 direto ou provedor que aceite player (jukehost ok). YouTube não funciona em player de áudio.
 - **Vídeo preto (Gumlet `.m3u8`)**: use URL **MP4** ou link do **YouTube**.
 - **Mensagem WhatsApp falha**: leia o motivo (número não existe / token errado / sem login).
