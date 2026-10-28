@@ -30,6 +30,7 @@ Server-only secrets: `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_W
 - **RLS**: `settings` has RLS enabled with no policies — only service role can read/write. Storage policies restrict to admin.
 - **Middleware**: touches auth for almost all routes (matcher excludes static assets). Keep changes compatible with Supabase SSR cookie handling.
 - **Next 16**: `layout.tsx` uses `LayoutProps<"/">`; `next.config.ts` has `cacheComponents: false` and Turbopack CSS rule for Tailwind. The top-of-file Next.js warning block is auto-managed by `next dev` — keep as-is.
+- **PDF reader**: `components/PdfReader.tsx` must only be imported via `components/PdfReaderClient.tsx` (`next/dynamic` + `ssr: false`) — importing `react-pdf` directly in a Server Component breaks SSR (`document is not defined`). pdf.js 6 needs `Promise.withResolvers` (ES2024), so `lib/pdf-polyfills.ts` (main thread) and `public/pdf-worker-polyfills.js` + `public/pdf.worker.polyfilled.mjs` (worker) polyfill it for older mobile browsers. The worker version must match `react-pdf`'s bundled `pdfjs-dist`.
 
 ## Where to look
 - Routes: `app/api/checkout`, `app/api/stripe/webhook`, `app/api/signed-url`, `app/api/acompanhamento`, `app/admin/*`

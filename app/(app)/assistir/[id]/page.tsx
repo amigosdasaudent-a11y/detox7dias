@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { maxPlan, planAllowed } from "@/lib/plan";
 import VideoPlayer from "@/components/VideoPlayer";
-import PdfReader from "@/components/PdfReader";
+import PdfReader from "@/components/PdfReaderClient";
 
 export const dynamic = "force-dynamic";
 
@@ -38,9 +38,10 @@ export default async function AssistirPage({
   let src = content.external_url as string | null;
   if (!src && content.file_path) {
     const svc = createServiceClient();
+    // 1h: dá tempo de abrir e ler no celular sem o link expirar no meio.
     const { data } = await svc.storage
       .from("content-files")
-      .createSignedUrl(content.file_path, 600);
+      .createSignedUrl(content.file_path, 3600);
     src = data?.signedUrl || null;
   }
   if (!src) notFound();

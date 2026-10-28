@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/server";
 import VideoPlayer from "@/components/VideoPlayer";
-import PdfReader from "@/components/PdfReader";
+import PdfReader from "@/components/PdfReaderClient";
 
 export const dynamic = "force-dynamic";
 

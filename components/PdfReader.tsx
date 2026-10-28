@@ -1,11 +1,15 @@
 "use client";
 
+// Precisa vir ANTES do react-pdf: instala APIs que o pdf.js 6 exige e que
+// faltam em navegadores de celular mais antigos (iOS < 17.4, Chrome < 119).
+import "@/lib/pdf-polyfills";
 import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+// O wrapper carrega os polyfills dentro do worker antes do worker oficial.
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.polyfilled.mjs";
 
 // Renderiza a página só quando ela se aproxima da tela (rolagem contínua leve).
 function LazyPage({
@@ -17,7 +21,7 @@ function LazyPage({
   pageNumber: number;
   width: number;
   onActive: (n: number) => void;
-  onError: () => void;
+  onError: (message?: string) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
@@ -51,7 +55,14 @@ function LazyPage({
   return (
     <div ref={ref} className="mb-3 flex justify-center">
       {show ? (
-        <Page pageNumber={pageNumber} width={width} loading="" onRenderError={onError} />
+        <Page
+          pageNumber={pageNumber}
+          width={width}
+          loading=""
+          onRenderError={(err) =>
+            onError(err instanceof Error ? err.message : String(err || "erro ao desenhar a página"))
+          }
+        />
       ) : (
         <div className="rounded bg-white/40" style={{ width, height: Math.round(width * 1.4) }} />
       )}
@@ -74,6 +85,7 @@ export default function PdfReader({
   const [zoom, setZoom] = useState(1);
   const [failed, setFailed] = useState(false);
   const [failMsg, setFailMsg] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
   const [boxWidth, setBoxWidth] = useState(350);
   const boxRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
@@ -180,18 +192,29 @@ export default function PdfReader({
       {failed ? (
         <div className="rounded-2xl bg-white p-6 text-center shadow">
           <p className="font-semibold">Não consegui abrir aqui 😕</p>
-          {failMsg && <p className="mx-auto mt-2 max-w-full truncate font-mono text-xs text-neutral-400">{failMsg}</p>}
+          <p className="mx-auto mt-2 max-w-md text-sm text-neutral-600">
+            Pode ser o navegador do celular. Tente de novo, abra o PDF direto no navegador
+            ou baixe o arquivo.
+          </p>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
             <button
               onClick={() => {
                 setFailed(false);
                 setFailMsg("");
-                setMode("google");
+                setRetryKey((k) => k + 1);
               }}
               className="rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white"
             >
-              Tentar pelo Google
+              Tentar de novo
             </button>
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border border-[#FF4D8D] px-6 py-2 font-semibold text-[#FF4D8D]"
+            >
+              Abrir no navegador
+            </a>
             <a
               href={url}
               download
@@ -202,15 +225,35 @@ export default function PdfReader({
               ⬇️ Baixar PDF
             </a>
           </div>
+          <button
+            onClick={() => {
+              setFailed(false);
+              setFailMsg("");
+              setMode("google");
+            }}
+            className="mt-3 text-xs text-neutral-500 underline"
+          >
+            Tentar pelo Google
+          </button>
+          <details className="mt-4 text-left">
+            <summary className="cursor-pointer text-xs text-neutral-400">
+              Detalhes técnicos (para suporte)
+            </summary>
+            <p className="mt-2 break-all font-mono text-xs text-neutral-400">
+              {failMsg || "erro sem mensagem"}
+              {typeof navigator !== "undefined" ? ` · ${navigator.userAgent}` : ""}
+            </p>
+          </details>
         </div>
       ) : (
         <div ref={boxRef} className="rounded-2xl bg-neutral-200 p-2 shadow">
           <Document
+            key={retryKey}
             file={url}
             onLoadSuccess={({ numPages }) => setPages(numPages)}
             onLoadError={(err) => {
               setFailed(true);
-              setFailMsg(err instanceof Error ? err.message : "erro desconhecido");
+              setFailMsg(err instanceof Error ? err.message : String(err || "erro desconhecido"));
             }}
             loading={<p className="p-8 text-center text-sm">Abrindo... 📖</p>}
           >
@@ -220,7 +263,10 @@ export default function PdfReader({
                 pageNumber={i + 1}
                 width={Math.round(boxWidth * zoom)}
                 onActive={setCurrentPage}
-                onError={() => setFailed(true)}
+                onError={(message) => {
+                  setFailed(true);
+                  setFailMsg(message || "");
+                }}
               />
             ))}
           </Document>
