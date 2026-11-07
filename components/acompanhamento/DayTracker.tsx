@@ -47,6 +47,11 @@ export default function DayTracker({
   wakeTime,
   sleepTime,
   hasCheckin,
+  waterGoal = 8,
+  liquids,
+  hypertension = false,
+  hypertensionWarning,
+  shoppingHref,
 }: {
   programId: string;
   durationDays: number;
@@ -56,6 +61,11 @@ export default function DayTracker({
   wakeTime: string | null;
   sleepTime: string | null;
   hasCheckin: boolean;
+  waterGoal?: number;
+  liquids?: string;
+  hypertension?: boolean;
+  hypertensionWarning?: string;
+  shoppingHref?: string;
 }) {
   const [state, setState] = useState<ProgressState>(initial);
   const [save, setSave] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -164,6 +174,9 @@ export default function DayTracker({
     : false;
   const doneMeals = meals ? meals.filter((m) => state.meals.includes(m.id)).length : 0;
   const mealsDone = meals ? doneMeals === meals.length : false;
+  const hasMeals = Boolean(meals && meals.length > 0);
+  // Dia de avaliação (sem refeições nem contador) pode ser concluído livremente.
+  const canComplete = hasMeals ? mealsDone : counter ? goalReached : true;
 
   return (
     <div className="mx-auto w-full max-w-xl flex-1 px-4 pb-24 pt-6 md:px-8">
@@ -191,6 +204,16 @@ export default function DayTracker({
       {eggAlternative && (
         <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-sm text-amber-800">
           {day.alternative!.label}
+        </p>
+      )}
+
+      {day.notice && (
+        <p className="mt-3 rounded-2xl bg-sky-50 p-3 text-sm text-sky-800">{day.notice}</p>
+      )}
+
+      {hypertension && hypertensionWarning && (
+        <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-sm text-amber-800">
+          {hypertensionWarning}
         </p>
       )}
 
@@ -266,8 +289,15 @@ export default function DayTracker({
                     ✓
                   </span>
                   <span className="w-12 shrink-0 font-bold text-[#B3124F]">{m.time}</span>
-                  <span className={checked ? "line-through text-neutral-500" : ""}>
-                    {m.description}
+                  <span className="min-w-0">
+                    {m.label && (
+                      <span className="block text-xs font-semibold text-neutral-500">
+                        {m.label}
+                      </span>
+                    )}
+                    <span className={checked ? "line-through text-neutral-500" : ""}>
+                      {m.description}
+                    </span>
                   </span>
                 </button>
               );
@@ -372,10 +402,10 @@ export default function DayTracker({
       <div className="mt-4 rounded-3xl bg-white p-5 shadow">
         <div className="flex items-center justify-between">
           <h2 className="font-bold">💧 Água</h2>
-          <span className="text-xs text-neutral-500">referência: 8 copos</span>
+          <span className="text-xs text-neutral-500">referência: {waterGoal} copos</span>
         </div>
         <div className="mt-3 flex flex-wrap gap-1">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: waterGoal }).map((_, i) => (
             <span
               key={i}
               className={`flex h-8 w-8 items-center justify-center rounded-full text-sm ${
@@ -403,12 +433,20 @@ export default function DayTracker({
             +
           </button>
         </div>
-        <p className="mt-2 text-xs text-neutral-500">
-          Líquidos permitidos: água, café e chás sem açúcar ou adoçante.
-        </p>
+        {liquids && (
+          <p className="mt-2 text-xs text-neutral-500">Líquidos permitidos: {liquids}</p>
+        )}
       </div>
 
       <div className="mt-4 flex flex-col gap-2">
+        {shoppingHref && (
+          <a
+            href={shoppingHref}
+            className="rounded-full border border-neutral-300 py-2 text-center font-semibold text-neutral-700"
+          >
+            🛒 Lista de compras
+          </a>
+        )}
         <a
           href={`/acompanhamento/${programId}/checkin/${day.day}`}
           className="rounded-full border border-[#FF4D8D] py-2 text-center font-semibold text-[#FF4D8D]"
@@ -417,19 +455,21 @@ export default function DayTracker({
         </a>
         <button
           onClick={() => persist({ ...state, completed: true })}
-          disabled={state.completed || (!mealsDone && !goalReached && !state.completed)}
+          disabled={state.completed || !canComplete}
           className="rounded-full bg-[#FF4D8D] py-2 font-semibold text-white disabled:opacity-40"
         >
           {state.completed
             ? "Dia concluído ✓"
-            : meals
-              ? mealsDone
-                ? "Concluir o dia"
-                : `Marque as ${meals.length} refeições para concluir`
-              : goalReached
-                ? "Concluir o dia"
+            : day.type === "avaliacao"
+              ? "Concluir a avaliação"
+              : hasMeals
+                ? mealsDone
+                  ? "Concluir o dia"
+                  : `Marque as ${meals!.length} refeições para concluir`
                 : counter
-                  ? "Atinja a meta para concluir"
+                  ? goalReached
+                    ? "Concluir o dia"
+                    : "Atinja a meta para concluir"
                   : "Concluir o dia"}
         </button>
       </div>

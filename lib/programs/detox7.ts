@@ -122,4 +122,12 @@ export const detox7: Program = {
       ],
     },
   ],
+  after: {
+    title: "E agora?",
+    paragraphs: [
+      "Você concluiu o desafio de 7 dias. O detox é um começo: mantenha os alimentos e os horários que funcionaram para você, sem exageros, e siga bebendo água ao longo do dia.",
+      "O próximo passo é o desafio de 15 dias, mais equilibrado, com cardápio de duas semanas e manutenção. Ele estará disponível aqui no app.",
+    ],
+    hashtag: "#desafiodetox7dias",
+  },
 };

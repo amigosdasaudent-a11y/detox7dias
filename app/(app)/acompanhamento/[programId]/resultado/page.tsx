@@ -111,6 +111,7 @@ export default async function ResultadoPage({
         avgMood={avg(rows.map((c) => (c.mood === null ? null : Number(c.mood))))}
         points={points}
         canFinish={canFinish}
+        after={program.after}
       />
       <SafetyButton programId={program.id} />
     </>

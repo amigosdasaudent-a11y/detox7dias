@@ -19,11 +19,15 @@ export default function StartWizard({
   title,
   questions,
   confirmLabel,
+  hasEggDays = false,
+  shoppingHref,
 }: {
   programId: string;
   title: string;
   questions: ScreeningQuestion[];
   confirmLabel: string;
+  hasEggDays?: boolean;
+  shoppingHref?: string;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -295,8 +299,8 @@ export default function StartWizard({
               <b>IMC {formatNumber(imc)}</b> — {imcClass(imc)}
               {imcLow && (
                 <p className="mt-1">
-                  Seu IMC está abaixo de 18,5. Por segurança, o desafio de 7 dias não deve
-                  ser iniciado. Procure um médico ou nutricionista.
+                  Seu IMC está abaixo de 18,5. Por segurança, este desafio não deve ser
+                  iniciado. Procure um médico ou nutricionista.
                 </p>
               )}
             </div>
@@ -316,6 +320,15 @@ export default function StartWizard({
               onFile={(f) => uploadPhoto(f, "side")}
             />
           </div>
+
+          {shoppingHref && (
+            <a
+              href={shoppingHref}
+              className="mt-4 block rounded-2xl bg-[#FFF5F7] p-3 text-sm font-semibold text-[#B3124F]"
+            >
+              🛒 Ver lista de compras da semana 1
+            </a>
+          )}
 
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
@@ -342,42 +355,55 @@ export default function StartWizard({
               className="mt-1 w-full rounded-xl border px-4 py-2 font-normal"
             />
           </label>
-          <label className="mt-3 flex items-start gap-2 rounded-2xl bg-neutral-50 p-3 text-sm">
-            <input
-              type="checkbox"
-              checked={eggIntolerance}
-              onChange={(e) => setEggIntolerance(e.target.checked)}
-              className="mt-0.5"
-            />
-            <span>
-              Tenho intolerância a ovo — trocar os dias do ovo por dieta líquida (opção
-              prevista no e-book).
-            </span>
-          </label>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <label className="text-sm font-semibold">
-              Que horas você acorda?
-              <input
-                type="time"
-                value={wakeTime}
-                onChange={(e) => setWakeTime(e.target.value)}
-                className="mt-1 w-full rounded-xl border px-4 py-2 font-normal"
-              />
-            </label>
-            <label className="text-sm font-semibold">
-              Que horas você dorme?
-              <input
-                type="time"
-                value={sleepTime}
-                onChange={(e) => setSleepTime(e.target.value)}
-                className="mt-1 w-full rounded-xl border px-4 py-2 font-normal"
-              />
-            </label>
-          </div>
-          <p className="mt-2 text-xs text-neutral-500">
-            Usamos esses horários só para os lembretes do dia do ovo (primeiro ovo até 30
-            min depois de acordar e última refeição 3h antes de dormir).
-          </p>
+          {hasEggDays && (
+            <>
+              <label className="mt-3 flex items-start gap-2 rounded-2xl bg-neutral-50 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={eggIntolerance}
+                  onChange={(e) => setEggIntolerance(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Tenho intolerância a ovo — trocar os dias do ovo por dieta líquida (opção
+                  prevista no e-book).
+                </span>
+              </label>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <label className="text-sm font-semibold">
+                  Que horas você acorda?
+                  <input
+                    type="time"
+                    value={wakeTime}
+                    onChange={(e) => setWakeTime(e.target.value)}
+                    className="mt-1 w-full rounded-xl border px-4 py-2 font-normal"
+                  />
+                </label>
+                <label className="text-sm font-semibold">
+                  Que horas você dorme?
+                  <input
+                    type="time"
+                    value={sleepTime}
+                    onChange={(e) => setSleepTime(e.target.value)}
+                    className="mt-1 w-full rounded-xl border px-4 py-2 font-normal"
+                  />
+                </label>
+              </div>
+              <p className="mt-2 text-xs text-neutral-500">
+                Usamos esses horários só para os lembretes do dia do ovo (primeiro ovo até 30
+                min depois de acordar e última refeição 3h antes de dormir).
+              </p>
+            </>
+          )}
+
+          {shoppingHref && (
+            <a
+              href={shoppingHref}
+              className="mt-3 block rounded-2xl bg-[#FFF5F7] p-3 text-sm font-semibold text-[#B3124F]"
+            >
+              🛒 Abrir a lista de compras da semana 1
+            </a>
+          )}
 
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 

@@ -67,11 +67,13 @@ export default function CheckinForm({
   programId,
   day,
   durationDays,
+  measureDays,
   initial,
 }: {
   programId: string;
   day: number;
   durationDays: number;
+  measureDays?: number[];
   initial: Checkin;
 }) {
   const router = useRouter();
@@ -88,8 +90,14 @@ export default function CheckinForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const mid = Math.ceil(durationDays / 2);
-  const suggestMeasures = day === 1 || day === mid || day === durationDays;
+  const suggestMeasures = measureDays?.length
+    ? measureDays.includes(day)
+    : day === 1 || day === Math.ceil(durationDays / 2) || day === durationDays;
+  const measureHint = measureDays?.length
+    ? `sugestão: medir ${measureDays
+        .map((d) => (d === 1 ? "no início" : d === durationDays ? "no fim" : `no dia ${d}`))
+        .join(", ")}`
+    : "sugestão: medir no início, no meio e no fim";
 
   function toggleSymptom(s: string) {
     if (s === "Nenhum") {
@@ -193,9 +201,7 @@ export default function CheckinForm({
           <p className="text-sm font-semibold">
             Peso e cintura (opcional)
             {suggestMeasures && (
-              <span className="ml-1 text-xs font-normal text-amber-700">
-                sugestão: medir no início, no meio e no fim
-              </span>
+              <span className="ml-1 text-xs font-normal text-amber-700">{measureHint}</span>
             )}
           </p>
           <div className="mt-2 grid grid-cols-2 gap-3">

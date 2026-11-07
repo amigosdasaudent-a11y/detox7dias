@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { currentDayNumber, daysUntilStart, SAFETY_FOOTER, getProgram } from "@/lib/programs";
+import { currentDayNumber, dayTypeLabel, daysUntilStart, SAFETY_FOOTER, getProgram } from "@/lib/programs";
 import SafetyButton from "@/components/acompanhamento/SafetyButton";
 import ResumeButton from "@/components/acompanhamento/ResumeButton";
 import { imcClass, formatNumber } from "@/lib/imc";
@@ -47,6 +47,26 @@ export default async function AcompanhamentoPage({
     .eq("program_id", program.id);
   const inicio = (measures || []).find((m) => m.moment === "inicio") || null;
   const fim = (measures || []).find((m) => m.moment === "fim") || null;
+
+  // Comparativo parcial (só em programas com mais de uma semana): usa o check-in do dia 7.
+  let week1: { weight_kg: number | string | null; waist_cm: number | string | null } | null = null;
+  if (program.durationDays > 7) {
+    const { data: checkins } = await supabase
+      .from("program_checkins")
+      .select("day, weight_kg, waist_cm")
+      .eq("user_id", user.id)
+      .eq("program_id", program.id)
+      .eq("day", 7)
+      .maybeSingle();
+    if (checkins && (checkins.weight_kg !== null || checkins.waist_cm !== null)) {
+      week1 = checkins;
+    }
+  }
+
+  const week1Weight = week1 && week1.weight_kg !== null ? Number(week1.weight_kg) : null;
+  const week1Waist = week1 && week1.waist_cm !== null ? Number(week1.waist_cm) : null;
+  const startWeight = inicio?.weight_kg ? Number(inicio.weight_kg) : null;
+  const startWaist = inicio?.waist_cm ? Number(inicio.waist_cm) : null;
 
   const today = currentDayNumber(enrollment.start_date, program.durationDays);
   const until = daysUntilStart(enrollment.start_date);
@@ -117,6 +137,43 @@ export default async function AcompanhamentoPage({
         )}
       </div>
 
+      {week1 && (
+        <div className="mt-4 rounded-3xl bg-white p-5 shadow">
+          <h2 className="font-bold">📊 Comparativo da semana 1</h2>
+          <p className="mt-1 text-sm text-neutral-600">
+            {week1Weight !== null && (
+              <>
+                Peso: {formatNumber(startWeight)} kg → {formatNumber(week1Weight)} kg
+                {startWeight !== null && (
+                  <span className="text-neutral-500">
+                    {" "}
+                    ({week1Weight - startWeight > 0 ? "+" : ""}
+                    {formatNumber(week1Weight - startWeight)} kg)
+                  </span>
+                )}
+              </>
+            )}
+            {week1Weight !== null && week1Waist !== null && " · "}
+            {week1Waist !== null && (
+              <>
+                Cintura: {formatNumber(startWaist)} cm → {formatNumber(week1Waist)} cm
+                {startWaist !== null && (
+                  <span className="text-neutral-500">
+                    {" "}
+                    ({week1Waist - startWaist > 0 ? "+" : ""}
+                    {formatNumber(week1Waist - startWaist)} cm)
+                  </span>
+                )}
+              </>
+            )}
+          </p>
+          <p className="mt-2 text-xs text-neutral-500">
+            Comparativo parcial com o check-in do dia 7. O resultado final aparece no último
+            dia. Cada corpo responde de um jeito.
+          </p>
+        </div>
+      )}
+
       {todayDef && !done && (
         <div className="mt-4 rounded-3xl bg-gradient-to-br from-[#FF4D8D] to-[#B3124F] p-6 text-white shadow">
           <p className="text-xs font-semibold uppercase tracking-wide opacity-90">
@@ -124,14 +181,21 @@ export default async function AcompanhamentoPage({
           </p>
           <h2 className="mt-1 text-xl font-extrabold">{todayDef.title}</h2>
           <p className="mt-1 text-sm opacity-90">
-            {todayDef.meals?.length
-              ? `${todayDef.meals.length} refeições para marcar`
-              : todayDef.counter
-                ? todayDef.counter.item === "ovos"
-                  ? `Meta: ${todayDef.counter.min} ovos`
-                  : `Meta: ${todayDef.counter.goal} maçãs`
-                : "Checklist do dia"}
+            {todayDef.type === "avaliacao"
+              ? "Avaliação final: peso, cintura e fotos"
+              : todayDef.meals?.length
+                ? `${todayDef.meals.length} refeições para marcar`
+                : todayDef.counter
+                  ? todayDef.counter.item === "ovos"
+                    ? `Meta: ${todayDef.counter.min} ovos`
+                    : `Meta: ${todayDef.counter.goal} maçãs`
+                  : "Checklist do dia"}
           </p>
+          {todayDef.notice && (
+            <p className="mt-2 rounded-2xl bg-white/15 p-3 text-xs leading-relaxed">
+              {todayDef.notice}
+            </p>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             <a
               href={`/acompanhamento/${program.id}/dia/${today}`}
@@ -176,7 +240,7 @@ export default async function AcompanhamentoPage({
                 </span>
                 <span className="text-xs font-bold">Dia {d.day}</span>
                 <span className="text-[10px] text-neutral-500">
-                  {d.type === "ovo" ? "Ovo" : d.type === "maca" ? "Maçã" : "Líquido"}
+                  {dayTypeLabel(d.type)}
                 </span>
               </a>
             );
@@ -216,6 +280,34 @@ export default async function AcompanhamentoPage({
           </p>
         </div>
       </div>
+
+      {program.shopping?.length ? (
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          {program.shopping.map((w) => (
+            <a
+              key={w.week}
+              href={`/acompanhamento/${program.id}/listas?semana=${w.week}`}
+              className="rounded-3xl bg-white p-5 shadow transition-shadow hover:shadow-md"
+            >
+              <h2 className="font-bold">🛒 Lista de compras · Semana {w.week}</h2>
+              <p className="mt-1 text-sm text-neutral-600">
+                {w.items.length} itens · toque para abrir e marcar o que já tem em casa.
+              </p>
+            </a>
+          ))}
+        </div>
+      ) : null}
+
+      {program.avoid?.length ? (
+        <div className="mt-6 rounded-3xl bg-white p-5 shadow">
+          <h2 className="font-bold">🚫 Evitar</h2>
+          <ul className="mt-2 flex list-disc flex-col gap-1 pl-5 text-sm text-neutral-600">
+            {program.avoid.map((a) => (
+              <li key={a}>{a}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="mt-6 rounded-3xl bg-white p-5 shadow">
         <h2 className="font-bold">⚠️ Atenção</h2>

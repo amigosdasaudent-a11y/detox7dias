@@ -214,7 +214,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error:
-            "Seu IMC está abaixo de 18,5. Por segurança, o desafio de 7 dias não deve ser iniciado. Procure um médico ou nutricionista.",
+            "Seu IMC está abaixo de 18,5. Por segurança, este desafio não deve ser iniciado. Procure um médico ou nutricionista.",
           blocked: true,
         },
         { status: 422 }

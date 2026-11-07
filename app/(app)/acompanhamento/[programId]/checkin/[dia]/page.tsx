@@ -46,6 +46,7 @@ export default async function CheckinPage({
         programId={program.id}
         day={dayNumber}
         durationDays={program.durationDays}
+        measureDays={program.measureDays}
         initial={
           checkin
             ? {

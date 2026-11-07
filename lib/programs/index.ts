@@ -1,11 +1,21 @@
 import { detox7 } from "./detox7";
-import type { Program } from "./types";
+import { detox15 } from "./detox15";
+import type { Program, ProgramDayType } from "./types";
 
-export type { Program, ProgramDay, ProgramMeal, ScreeningQuestion } from "./types";
+export type {
+  Program,
+  ProgramDay,
+  ProgramDayType,
+  ProgramMeal,
+  ScreeningQuestion,
+  ShoppingItem,
+  ShoppingWeek,
+} from "./types";
 
-// Programas disponíveis no app. O Detox 15 Dias entra aqui quando o módulo existir.
+// Programas disponíveis no app. O id precisa bater com collections.program_id.
 const PROGRAMS: Record<string, Program> = {
   [detox7.id]: detox7,
+  [detox15.id]: detox15,
 };
 
 export function getProgram(id: string | null | undefined): Program | null {
@@ -15,6 +25,22 @@ export function getProgram(id: string | null | undefined): Program | null {
 
 export function listPrograms(): Program[] {
   return Object.values(PROGRAMS);
+}
+
+/** Rótulo curto do tipo do dia (jornada do acompanhamento). */
+export function dayTypeLabel(type: ProgramDayType): string {
+  switch (type) {
+    case "ovo":
+      return "Ovo";
+    case "maca":
+      return "Maçã";
+    case "liquido":
+      return "Líquido";
+    case "avaliacao":
+      return "Avaliação";
+    default:
+      return "Cardápio";
+  }
 }
 
 /** Dia atual (1..duração) a partir da data de início (YYYY-MM-DD). */

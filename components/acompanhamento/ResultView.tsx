@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import FileDrop from "@/components/FileDrop";
 import { imcClass, imcValue, IMC_NOTE, formatNumber } from "@/lib/imc";
 import { uploadProgressPhoto } from "@/lib/progress-upload";
+import type { Program } from "@/lib/programs/types";
 
 type Measure = {
   weight_kg: number | string | null;
@@ -36,6 +37,7 @@ export default function ResultView({
   avgMood,
   points,
   canFinish,
+  after,
 }: {
   programId: string;
   programTitle: string;
@@ -55,6 +57,7 @@ export default function ResultView({
   avgMood: number | null;
   points: Point[];
   canFinish: boolean;
+  after?: Program["after"] | null;
 }) {
   const router = useRouter();
   const [weight, setWeight] = useState(fim?.weight_kg ? String(fim.weight_kg) : "");
@@ -318,34 +321,34 @@ export default function ResultView({
             </div>
           )}
 
-          <div className="mt-4 rounded-3xl bg-[#FFF5F7] p-6">
-            <h2 className="font-bold">E agora?</h2>
-            <p className="mt-2 text-sm text-neutral-700">
-              Você concluiu o desafio de {durationDays} dias. O detox é um começo: mantenha
-              os alimentos e os horários que funcionaram para você, sem exageros, e siga
-              bebendo água ao longo do dia.
-            </p>
-            <p className="mt-2 text-sm text-neutral-700">
-              O próximo passo é o desafio de 15 dias, mais equilibrado, com cardápio de duas
-              semanas e manutenção. Ele estará disponível aqui no app.
-            </p>
-            {weeklyLoss > 1.5 && (
-              <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-sm text-amber-800">
-                A variação de peso foi rápida para o período. Vale conversar com um médico
-                ou nutricionista antes de continuar.
-              </p>
-            )}
-            <p className="mt-3 text-xs text-neutral-500">
-              Se quiser compartilhar sua experiência, use #desafiodetox7dias. Nada é
-              publicado automaticamente.
-            </p>
-            <a
-              href="/inicio"
-              className="mt-4 inline-block rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white"
-            >
-              Voltar ao início
-            </a>
-          </div>
+          {after && (
+            <div className="mt-4 rounded-3xl bg-[#FFF5F7] p-6">
+              <h2 className="font-bold">{after.title}</h2>
+              {after.paragraphs.map((p) => (
+                <p key={p} className="mt-2 text-sm text-neutral-700">
+                  {p}
+                </p>
+              ))}
+              {weeklyLoss > 1.5 && (
+                <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-sm text-amber-800">
+                  A variação de peso foi rápida para o período. Vale conversar com um médico
+                  ou nutricionista antes de continuar.
+                </p>
+              )}
+              {after.hashtag && (
+                <p className="mt-3 text-xs text-neutral-500">
+                  Se quiser compartilhar sua experiência, use {after.hashtag}. Nada é
+                  publicado automaticamente.
+                </p>
+              )}
+              <a
+                href="/inicio"
+                className="mt-4 inline-block rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white"
+              >
+                Voltar ao início
+              </a>
+            </div>
+          )}
         </>
       )}
 

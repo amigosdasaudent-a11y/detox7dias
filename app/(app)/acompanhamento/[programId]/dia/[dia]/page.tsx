@@ -33,7 +33,7 @@ export default async function DiaPage({
     .maybeSingle();
   if (!enrollment) redirect(`/acompanhamento/${program.id}/iniciar`);
 
-  const [{ data: progress }, { data: checkin }] = await Promise.all([
+  const [{ data: progress }, { data: checkin }, { data: screening }] = await Promise.all([
     supabase
       .from("program_day_progress")
       .select("*")
@@ -48,7 +48,19 @@ export default async function DiaPage({
       .eq("program_id", program.id)
       .eq("day", dayNumber)
       .maybeSingle(),
+    supabase
+      .from("program_screenings")
+      .select("answers")
+      .eq("user_id", user.id)
+      .eq("program_id", program.id)
+      .maybeSingle(),
   ]);
+
+  const answers =
+    screening?.answers && typeof screening.answers === "object"
+      ? (screening.answers as Record<string, unknown>)
+      : {};
+  const hypertension = answers.hipertensao === true;
 
   return (
     <>
@@ -70,6 +82,15 @@ export default async function DiaPage({
         wakeTime={enrollment.wake_time || null}
         sleepTime={enrollment.sleep_time || null}
         hasCheckin={Boolean(checkin)}
+        waterGoal={program.waterGoal}
+        liquids={program.liquids}
+        hypertension={hypertension}
+        hypertensionWarning={program.hypertensionWarning}
+        shoppingHref={
+          program.shopping?.length
+            ? `/acompanhamento/${program.id}/listas`
+            : undefined
+        }
       />
       <SafetyButton programId={program.id} day={dayNumber} />
     </>

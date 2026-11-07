@@ -21,6 +21,10 @@ export default async function IniciarPage({
         title={program.title}
         questions={program.screening.questions}
         confirmLabel={program.screening.confirmLabel}
+        hasEggDays={program.days.some((d) => d.type === "ovo")}
+        shoppingHref={
+          program.shopping?.length ? `/acompanhamento/${program.id}/listas` : undefined
+        }
       />
       <SafetyButton programId={program.id} />
     </>
