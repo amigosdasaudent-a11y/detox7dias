@@ -105,7 +105,7 @@ Tabelas: `profiles` (1 por `auth.users`, trigger `handle_new_user`), `entitlemen
 
 **Acompanhamento** (migration `011_programas.sql`): `program_enrollments`, `program_screenings`, `program_measures`, `program_day_progress`, `program_checkins`, `program_symptom_logs` — RLS por dono (`user_id = auth.uid() or is_admin()`), únicos por `(user_id, program_id[, day|moment])`. Detalhes em `docs/04-acompanhamento.md`.
 
-Schema base: `supabase/schema.sql`; migrations `002` a `011` (aplicar via `node scripts/apply-sql.mjs <arq>` com `DATABASE_URL` do pooler, ou colar no SQL Editor do Supabase).
+Schema base: `supabase/schema.sql`; migrations `002` a `012` (aplicar via `node scripts/apply-sql.mjs <arq>` com `DATABASE_URL` do pooler, ou colar no SQL Editor do Supabase).
 Segurança: RLS ativo; leitura pública só de publicados; escrita de conteúdo só admin; buckets `covers` e `content-files` **privados** (entrega por URL assinada); `service_role` e segredos só no servidor. Recomendado: desligar cadastro público (Auth → Sign In/Up).
 
 ## 7. Scripts (`scripts/`, todos leem `.env.local`, nada hardcoded)

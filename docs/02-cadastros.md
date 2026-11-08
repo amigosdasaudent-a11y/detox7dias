@@ -34,15 +34,15 @@ A escolha do programa é só uma ligação: o **acesso continua sendo pelo plano
 
 1. **Tipo**: `E-book (PDF)` | `Áudio (MP3)` | `Vídeo`.
 2. **Título**.
-3. **Produto**: em qual produto fica a aula (ou `Sem produto` → cai em "Avulsos" no Início).
+3. **Produtos**: marque **um ou mais** produtos. O mesmo conteúdo aparece em todos os marcados (ex.: os PDFs complementares `Sopas Detox`, `Sucos Detox` e `Comida Viva` ficam no Detox 7 Dias **e** no Detox 15 Dias, sem subir o arquivo duas vezes). Nenhum marcado → cai em "Avulsos" no Início.
 4. **Arquivo** (sobe para o armazenamento privado):
    - E-book → PDF | Áudio → MP3 | Vídeo → MP4 **ou** deixe vazio e use a URL abaixo.
 5. **URL do vídeo** (só tipo Vídeo, quando não há arquivo): YouTube (`youtube.com/watch?v=...` ou `youtu.be/...`), Vimeo (`vimeo.com/...`) ou Gumlet **MP4** (recomendado; ative MP4 em *processing settings* no Gumlet e cole o MP4, não o `.m3u8` — o `.m3u8` com token dá tela preta).
 6. **Capa** (imagem opcional; aparece no card do app).
 7. **Salvar conteúdo** → nasce **Visível** (use o 👁 para ocultar sem apagar).
-8. Na lista: filtro por produto (`Todos` | cada produto | `Sem produto`); selos de tipo (`pdf`, `mp3`, `vídeo`), `Visível/Oculto` e produto dono; ações 👁 mostrar/ocultar, **✏️ editar** (tipo, título, descrição, URL, categoria, plano, produto), 🗑 excluir.
+8. Na lista: filtro por produto (`Todos` | cada produto | `Sem produto`); selos de tipo (`pdf`, `mp3`, `vídeo`), `Visível/Oculto` e os produtos donos (mostra todos, separados por `+`); ações 👁 mostrar/ocultar, **✏️ editar** (tipo, título, descrição, URL, categoria, plano, produtos), 🗑 excluir.
 
-Onde aparece: dentro do produto (`/produto/[id]`) ou Avulsos; e-book abre o PDF em nova aba; áudio/vídeo abrem `/assistir/[id]`.
+Onde aparece: dentro de **cada produto marcado** (`/produto/[id]`) ou Avulsos; e-book abre o PDF em nova aba; áudio/vídeo abrem `/assistir/[id]`.
 
 ## 3. Banner (carrossel do Início)
 

@@ -81,7 +81,7 @@ O acesso continua sendo pelo **plano** (não é o acompanhamento que libera o pr
 **+ Novo Conteúdo:**
 1. **Tipo**: E-book (PDF) / Áudio (MP3) / Vídeo.
 2. Título.
-3. **Produto**: em qual produto fica (ou `Sem produto` → vira seção de categoria/Avulsos no Início).
+3. **Produtos**: marque **um ou mais** produtos — o conteúdo aparece em todos eles (ex.: `Sopas Detox`, `Sucos Detox` e `Comida Viva` dentro do Detox 7 Dias **e** do Detox 15 Dias). Nenhum marcado → vira seção de categoria/Avulsos no Início.
 4. Arquivo **ou** link, conforme o tipo:
    - **E-book**: upload PDF (fica no nosso armazenamento privado). Cliente escolhe **Ler aqui** (leitor próprio com zoom A-/A+ e aviso de girar o celular) ou **Baixar**.
    - **Áudio**: **só link** (ex: `https://audio.jukehost.co.uk/...`). Não usamos nosso espaço para áudio.
@@ -91,9 +91,9 @@ O acesso continua sendo pelo **plano** (não é o acompanhamento que libera o pr
 7. **Plano mínimo** (Essencial/Completo/Vitalício).
 8. Salvar → nasce **Visível**.
 
-Lista: filtro por produto + selos (tipo, Visível/Oculto, produto, **🎁 Grátis** se amostra).
+Lista: filtro por produto + selos (tipo, Visível/Oculto, produtos donos separados por `+`, **🎁 Grátis** se amostra).
 
-**Ações por linha:** 👁 mostrar/ocultar · 🎁 liberar grátis (amostra pública) · 🔗 copiar link público (só quando Grátis+Visível) · ✏️ editar (modal: tipo condicional, trocar arquivo, URL, categoria, plano, produto) · 🗑 excluir.
+**Ações por linha:** 👁 mostrar/ocultar · 🎁 liberar grátis (amostra pública) · 🔗 copiar link público (só quando Grátis+Visível) · ✏️ editar (modal: tipo condicional, trocar arquivo, URL, categoria, plano, produtos) · 🗑 excluir.
 
 **Editar (modal):** mudar o tipo muda os campos (vídeo mostra URL; áudio mostra URL e esconde upload). Em áudio, **não há upload MP3**.
 
