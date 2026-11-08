@@ -15,6 +15,8 @@ type Content = {
   category: string | null;
   min_plan: string | null;
   collection_id: string | null;
+  /** Produtos aos quais o conteúdo pertence (pode ser mais de um). */
+  collection_ids: string[];
   published: boolean;
   is_free: boolean;
   sort_order: number;
@@ -27,6 +29,45 @@ const TYPE_BADGE: Record<string, string> = {
   audio: "mp3",
   video: "vídeo",
 };
+
+function ProductChecks({
+  collections,
+  value,
+  onChange,
+}: {
+  collections: Collection[];
+  value: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  function toggle(id: string) {
+    onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id]);
+  }
+  return (
+    <div className="rounded-xl border p-3">
+      <p className="text-sm font-semibold">Produtos (pode marcar mais de um)</p>
+      <p className="text-xs text-neutral-500">
+        O mesmo conteúdo aparece em todos os produtos marcados — sem precisar subir o arquivo de novo.
+      </p>
+      <div className="mt-2 flex flex-col gap-1">
+        {collections.map((c) => (
+          <label key={c.id} className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={value.includes(c.id)}
+              onChange={() => toggle(c.id)}
+            />
+            {c.title}
+          </label>
+        ))}
+      </div>
+      {value.length === 0 && (
+        <p className="mt-2 text-xs text-neutral-500">
+          Nenhum produto marcado → o conteúdo aparece em “Avulsos” no Início.
+        </p>
+      )}
+    </div>
+  );
+}
 
 async function upload(file: File, bucket: string): Promise<string> {
   const { uploadAdminFile } = await import("@/lib/admin-upload");
@@ -42,7 +83,7 @@ export default function ConteudosPage() {
   const [type, setType] = useState("video");
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
-  const [collectionId, setCollectionId] = useState("");
+  const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const [editing, setEditing] = useState<Content | null>(null);
@@ -52,7 +93,7 @@ export default function ConteudosPage() {
   const [eUrl, setEUrl] = useState("");
   const [eCategory, setECategory] = useState("");
   const [ePlan, setEPlan] = useState("essencial");
-  const [eCollection, setECollection] = useState("");
+  const [eCollections, setECollections] = useState<string[]>([]);
   const [eFile, setEFile] = useState<File | null>(null);
   const [eCover, setECover] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
@@ -95,13 +136,13 @@ export default function ConteudosPage() {
       const res = await fetch("/api/admin/contents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, title, file_path, cover_path, external_url: url || null, collection_id: collectionId || null }),
+        body: JSON.stringify({ type, title, file_path, cover_path, external_url: url || null, collection_ids: collectionIds }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setTitle("");
       setUrl("");
-      setCollectionId("");
+      setCollectionIds([]);
       setFile(null);
       setCover(null);
       setShowForm(false);
@@ -120,7 +161,7 @@ export default function ConteudosPage() {
     setEUrl(c.external_url || "");
     setECategory(c.category || "");
     setEPlan(c.min_plan || "essencial");
-    setECollection(c.collection_id || "");
+    setECollections(c.collection_ids || (c.collection_id ? [c.collection_id] : []));
     setEFile(null);
     setECover(null);
   }
@@ -148,7 +189,7 @@ export default function ConteudosPage() {
           ...(cover_path ? { cover_path } : {}),
           category: eCategory || null,
           min_plan: ePlan,
-          collection_id: eCollection || null,
+          collection_ids: eCollections,
         }),
       });
       if (!res.ok) throw new Error("Falha ao salvar.");
@@ -194,11 +235,17 @@ export default function ConteudosPage() {
     load();
   }
 
-  const visible = items.filter((c) =>
-    filter === "all" ? true : filter === "none" ? !c.collection_id : c.collection_id === filter
-  );
-  const colName = (id: string | null) =>
-    id ? collections.find((c) => c.id === id)?.title || "?" : "Sem produto";
+  const visible = items.filter((c) => {
+    const ids = c.collection_ids || [];
+    return filter === "all" ? true : filter === "none" ? ids.length === 0 : ids.includes(filter);
+  });
+  const colNames = (c: Content) => {
+    const ids = c.collection_ids || (c.collection_id ? [c.collection_id] : []);
+    if (!ids.length) return "Sem produto";
+    return ids
+      .map((id) => collections.find((col) => col.id === id)?.title || "?")
+      .join(" + ");
+  };
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-8">
@@ -244,15 +291,11 @@ export default function ConteudosPage() {
             ))}
           </div>
           <input className="rounded-xl border px-4 py-2" placeholder="Título" required value={title} onChange={(e) => setTitle(e.target.value)} />
-          <label className="text-sm">
-            Produto (em qual produto fica esta aula?)
-            <select className="mt-1 block w-full rounded-xl border px-4 py-2" value={collectionId} onChange={(e) => setCollectionId(e.target.value)}>
-              <option value="">Sem produto</option>
-              {collections.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
-            </select>
-          </label>
+          <ProductChecks
+            collections={collections}
+            value={collectionIds}
+            onChange={setCollectionIds}
+          />
         {type !== "audio" && (
           <FileDrop
             title={type === "ebook" ? "Arquivo PDF" : "Arquivo MP4 (ou deixe vazio e use URL abaixo)"}
@@ -343,15 +386,11 @@ export default function ConteudosPage() {
                 </select>
               </label>
             </div>
-            <label className="text-sm font-semibold">
-              Produto (em qual produto fica esta aula?)
-              <select className="mt-1 w-full rounded-xl border px-4 py-2 font-normal" value={eCollection} onChange={(e) => setECollection(e.target.value)}>
-                <option value="">Sem produto</option>
-                {collections.map((c) => (
-                  <option key={c.id} value={c.id}>{c.title}</option>
-                ))}
-              </select>
-            </label>
+            <ProductChecks
+              collections={collections}
+              value={eCollections}
+              onChange={setECollections}
+            />
             <div className="flex gap-2">
               <button disabled={loading} className="rounded-full bg-[#FF4D8D] px-6 py-2 font-semibold text-white disabled:opacity-50">
                 Salvar
@@ -389,7 +428,7 @@ export default function ConteudosPage() {
                   </span>
                 )}
                 <span className="rounded-full bg-[#FFF0F5] px-2 py-0.5 text-xs font-bold text-[#FF4D8D]">
-                  {colName(c.collection_id)}
+                  {colNames(c)}
                 </span>
               </p>
               <p className="truncate font-mono text-xs text-neutral-500">{c.external_url || c.file_path}</p>

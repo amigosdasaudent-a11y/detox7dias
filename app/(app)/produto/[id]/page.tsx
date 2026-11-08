@@ -56,13 +56,43 @@ export default async function ProdutoPage({
     );
   }
 
-  const { data: allContents } = await supabase
-    .from("contents")
-    .select("id, type, title, description, cover_path, file_path, external_url, min_plan")
+  // Conteúdos do produto: o mesmo conteúdo pode estar em vários produtos
+  // (ex.: PDFs complementares nos dois desafios detox).
+  const { data: links, error: linksError } = await supabase
+    .from("content_collections")
+    .select("content_id")
     .eq("collection_id", id)
-    .eq("published", true)
     .order("sort_order");
-  const contents = allContents || [];
+  let contentIds = (links || []).map((l) => l.content_id as string);
+  if (linksError) {
+    // Fallback para antes da migration 012 (vínculo único antigo).
+    const { data: legacy } = await supabase
+      .from("contents")
+      .select("id")
+      .eq("collection_id", id);
+    contentIds = (legacy || []).map((c) => c.id);
+  }
+
+  type ContentRow = {
+    id: string;
+    type: string;
+    title: string;
+    description: string | null;
+    cover_path: string | null;
+    file_path: string | null;
+    external_url: string | null;
+    min_plan: string | null;
+  };
+  let contents: ContentRow[] = [];
+  if (contentIds.length) {
+    const { data } = await supabase
+      .from("contents")
+      .select("id, type, title, description, cover_path, file_path, external_url, min_plan")
+      .in("id", contentIds)
+      .eq("published", true);
+    const order = new Map(contentIds.map((cid, i) => [cid, i]));
+    contents = (data || []).sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+  }
 
   // Acompanhamento (só nos produtos ligados a um programa).
   const program = getProgram(product.program_id);
